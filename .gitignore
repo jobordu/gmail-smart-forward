@@ -1,3 +1,4 @@
 node_modules/
 .env
 src/_env.js
+.clasp.json

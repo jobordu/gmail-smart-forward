@@ -45,7 +45,7 @@ A browser window will open. Sign in with your Google account and approve the req
 clasp create --title "Gmail Smart Forward" --type standalone --rootDir src
 ```
 
-This creates the project in your Google account and writes `.clasp.json` with the script ID.
+This creates the project in your Google account and writes `.clasp.json` with the script ID. `.clasp.json` is gitignored — copy `.clasp.json.example` as a reference if needed.
 
 > **Opening the editor:** `clasp open` may not work in v3. Use the direct URL from `.clasp.json`:
 > `https://script.google.com/d/<scriptId>/edit`
