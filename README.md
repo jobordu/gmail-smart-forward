@@ -1,8 +1,10 @@
 # Gmail Smart Forward
 
-**Give this prompt to your coding agent:**
-
-> Clone https://github.com/Borduas-Holdings/gmail-smart-forward, then read `onboard.md` at the root — it contains your full instructions for onboarding me through this tool.
+> [!TIP]
+> **Get started — give this prompt to your coding agent:**
+> ```
+> Clone https://github.com/Borduas-Holdings/gmail-smart-forward, then read onboard.md at the root — it contains your full instructions for onboarding me through this tool.
+> ```
 
 ---
 
