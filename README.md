@@ -1,5 +1,11 @@
 # Gmail Smart Forward
 
+**Give this prompt to your coding agent:**
+
+> Read `onboard.md` at the root of this repo — it contains your full instructions for onboarding me through this tool.
+
+---
+
 Automatically forward receipts and invoices from approved suppliers to a target email address (e.g. an accounting inbox, Revolut business email, or bookkeeper).
 
 Runs entirely in Google Apps Script — no server, no hosting, no ongoing cost.
