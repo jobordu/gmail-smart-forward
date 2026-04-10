@@ -1,4 +1,16 @@
 {
-  "scriptId": "YOUR_SCRIPT_ID_HERE",
-  "rootDir": "src"
+  "scriptId": "1Q__mXAwvau9aj8hCBcoGz19aquAz3mXuozGkNpuS1XXQkIYiMiuG8hTo",
+  "rootDir": "src",
+  "scriptExtensions": [
+    ".js",
+    ".gs"
+  ],
+  "htmlExtensions": [
+    ".html"
+  ],
+  "jsonExtensions": [
+    ".json"
+  ],
+  "filePushOrder": [],
+  "skipSubdirectories": false
 }

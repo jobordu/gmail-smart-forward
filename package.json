@@ -3,14 +3,16 @@
   "version": "1.0.0",
   "description": "Forward receipts/invoices from approved suppliers to a target email address",
   "scripts": {
-    "push": "clasp push",
+    "build-env": "node scripts/build-env.js",
+    "push": "npm run build-env && clasp push --rootDir src",
     "pull": "clasp pull",
-    "deploy": "clasp push && clasp deploy",
+    "deploy": "npm run build-env && clasp push && clasp deploy",
     "open": "clasp open",
     "logs": "clasp logs"
   },
   "devDependencies": {
     "@google/clasp": "^2.4.2",
-    "@types/google-apps-script": "^1.0.83"
+    "@types/google-apps-script": "^1.0.83",
+    "dotenv": "^17.4.1"
   }
 }
