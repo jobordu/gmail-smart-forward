@@ -97,22 +97,43 @@
 
 ## Traceability
 
-*Updated by roadmapper*
+*Updated by roadmapper — 2026-04-10*
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SETUP-01 through SETUP-08 | Phase 1 | Pending |
-| CFG-01 through CFG-05 | Phase 2 | Pending |
-| ROLL-01 through ROLL-05 | Phase 3 | Pending |
-| STAT-01 through STAT-03 | Phase 3 | Pending |
-| ALIST-01 through ALIST-05 | Phase 4 | Pending |
+| SETUP-01 | Phase v1.0-01 | Pending |
+| SETUP-02 | Phase v1.0-01 | Pending |
+| SETUP-03 | Phase v1.0-01 | Pending |
+| SETUP-04 | Phase v1.0-01 | Pending |
+| SETUP-05 | Phase v1.0-01 | Pending |
+| SETUP-06 | Phase v1.0-01 | Pending |
+| SETUP-07 | Phase v1.0-01 | Pending |
+| SETUP-08 | Phase v1.0-01 | Pending |
+| CFG-01 | Phase v1.0-02 | Pending |
+| CFG-02 | Phase v1.0-02 | Pending |
+| CFG-03 | Phase v1.0-02 | Pending |
+| CFG-04 | Phase v1.0-02 | Pending |
+| CFG-05 | Phase v1.0-02 | Pending |
+| ROLL-01 | Phase v1.0-03 | Pending |
+| ROLL-02 | Phase v1.0-03 | Pending |
+| ROLL-03 | Phase v1.0-03 | Pending |
+| ROLL-04 | Phase v1.0-03 | Pending |
+| ROLL-05 | Phase v1.0-03 | Pending |
+| STAT-01 | Phase v1.0-03 | Pending |
+| STAT-02 | Phase v1.0-03 | Pending |
+| STAT-03 | Phase v1.0-03 | Pending |
+| ALIST-01 | Phase v1.0-04 | Pending |
+| ALIST-02 | Phase v1.0-04 | Pending |
+| ALIST-03 | Phase v1.0-04 | Pending |
+| ALIST-04 | Phase v1.0-04 | Pending |
+| ALIST-05 | Phase v1.0-04 | Pending |
 
 **Coverage:**
 - v1 requirements: 26 total
-- Baseline requirements: 9 total
-- Mapped to phases: 26
+- Baseline requirements: 9 total (cross-cutting, applied across all phases)
+- Mapped to phases: 26/26
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-10*
-*Last updated: 2026-04-10 after initial definition*
+*Last updated: 2026-04-10 — traceability expanded to per-requirement rows by roadmapper*
