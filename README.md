@@ -8,21 +8,22 @@
 
 ---
 
-Automatically forward receipts and invoices from approved suppliers to a target email address (e.g. an accounting inbox, Revolut business email, or bookkeeper).
+A serverless Gmail forwarder with sender allowlist, keyword matching, and attachment filtering. Google-only — no external services, no server, no hosting cost. Works on a free personal Gmail account.
 
-Runs entirely in **Google Apps Script** — no server, no hosting, no ongoing cost. Works on a free personal Gmail account.
+Configure it for any forwarding use case. The default ships with a bilingual PT/EN invoice vocabulary (`fatura`, `factura`, `recibo`, `invoice`, `receipt`, `payslip`…) as an example — your coding agent will ask about your use case and generate the right keywords in the right language during onboarding.
 
 ---
 
 ## How it works
 
-1. **Discovery** — scans your Gmail history to surface likely supplier senders
+1. **Discovery** — scans your Gmail history to surface likely senders matching your use case
 2. **Allowlist** — you manually approve which senders to trust
-3. **Dry-run backfill** — previews what would be forwarded, no emails sent
-4. **Real backfill** — forwards approved historical receipts
-5. **Live mode** — time-driven trigger processes new emails every 15 minutes
+3. **Keyword matching** — subject and attachment keywords filter by use case and language
+4. **Dry-run backfill** — previews what would be forwarded, no emails sent
+5. **Real backfill** — forwards approved historical emails
+6. **Live mode** — time-driven trigger processes new emails every 15 minutes
 
-Only emails from allowlisted senders that contain a PDF attachment are forwarded. Each qualifying message is forwarded individually (not the whole thread). Forwarded threads are labeled for idempotency — running the backfill twice is safe.
+Only emails from allowlisted senders that match your keywords and contain an allowed attachment (PDF by default) are forwarded. Each qualifying message is forwarded individually (not the whole thread). Forwarded threads are labeled for idempotency — running the backfill twice is safe.
 
 ---
 

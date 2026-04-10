@@ -15,10 +15,14 @@ At each step:
 - If a step fails, help me diagnose and fix it before continuing
 
 Before we start, ask me:
-1. **Origin email** — the Gmail address that receives invoices (the account we are setting up)
-2. **Target email** — where invoices should be forwarded to (e.g. accounting inbox, bookkeeper)
+1. **Origin email** — the Gmail address to set up (the one that receives emails)
+2. **Target email** — where matched emails should be forwarded to (e.g. accounting inbox, Revolut, bookkeeper)
+3. **Use case** — what kind of emails should be forwarded? (e.g. supplier invoices, shipping notifications, legal documents, payslips…)
+4. **Languages** — what language(s) do these emails arrive in? (e.g. English, Portuguese, French, Spanish…)
 
-Use these two values throughout the session when referencing config.
+Use the origin and target emails throughout the session when referencing config.
+
+Based on the use case and languages, generate a tailored set of `SUBJECT_KEYWORDS` and `ATTACHMENT_FILENAME_KEYWORDS` — covering synonyms, common subject line patterns, and attachment naming conventions in all specified languages. Write these into `.env` before the first `npm run push`. The defaults in `src/constants.js` are a bilingual PT/EN invoice example — override them for any other use case.
 
 The full phase-by-phase instructions are in `docs/rollout-guide.md`. The config variables and maintenance tasks are in `docs/config-reference.md`. Use these as your source of truth throughout the session.
 
