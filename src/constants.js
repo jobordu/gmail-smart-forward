@@ -100,6 +100,10 @@ var DEFAULT_EXCLUDED_KEYWORDS = [
   'discount',
 ];
 
+// File extensions that count as valid invoice attachments.
+// Compared case-insensitively against attachment filenames.
+var DEFAULT_ATTACHMENT_EXTENSIONS = ['pdf'];
+
 var DEFAULT_DISCOVERY_DAYS = 365;
 var DEFAULT_MAX_EMAILS_PER_RUN = 50;
 var DEFAULT_DRY_RUN = true;

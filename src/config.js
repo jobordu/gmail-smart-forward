@@ -67,6 +67,12 @@ var Config = (function () {
       return _getList('ATTACHMENT_FILENAME_KEYWORDS', DEFAULT_ATTACHMENT_KEYWORDS);
     },
 
+    // Allowed attachment file extensions (without dot, lowercase).
+    // Only threads containing at least one matching attachment will be forwarded.
+    getAttachmentExtensions: function () {
+      return _getList('ATTACHMENT_EXTENSIONS', DEFAULT_ATTACHMENT_EXTENSIONS);
+    },
+
     // Operational
     getDiscoveryDays:       function () { return _getInt('DISCOVERY_DAYS', DEFAULT_DISCOVERY_DAYS); },
     getBackfillAfterDate:   function () { return _get('BACKFILL_AFTER_DATE', null); },

@@ -88,25 +88,39 @@ var Classifier = (function () {
       return Labels.isForwarded(thread);
     },
 
-    // True if any message in the thread has a receipt signal (PDF or keyword).
-    // Checks all messages so reply threads don't lose their attachment signal.
-    threadHasReceiptSignal: function (thread) {
+    // True if a filename ends with one of the allowed extensions.
+    _hasAllowedExtension: function (filename) {
+      var extensions = Config.getAttachmentExtensions();
+      var lower = filename.toLowerCase();
+      for (var i = 0; i < extensions.length; i++) {
+        if (lower.endsWith('.' + extensions[i])) return true;
+      }
+      return false;
+    },
+
+    // True if any message in the thread has at least one allowed attachment.
+    // Scans all messages so attachments in earlier messages are not missed.
+    threadHasAllowedAttachment: function (thread) {
       var messages = thread.getMessages();
       for (var i = 0; i < messages.length; i++) {
-        if (Classifier.isForwardableReceipt(messages[i])) return true;
+        var attachments = messages[i].getAttachments();
+        for (var j = 0; j < attachments.length; j++) {
+          if (Classifier._hasAllowedExtension(attachments[j].getName())) return true;
+        }
       }
       return false;
     },
 
     // Returns null if thread should be forwarded, or a rejection reason string.
+    // Requires at least one allowed attachment (e.g. PDF) somewhere in the thread.
     // excluded-keyword is intentionally NOT checked for allowlisted senders —
     // words like "unsubscribe" in footers or "sale" in "Sales Invoice" cause
     // false positives on legitimate invoices from approved suppliers.
     classify: function (thread, message) {
-      if (Classifier.hasAlreadyBeenForwarded(thread))    return 'already-forwarded';
-      if (Classifier.isExcludedSender(message))           return 'excluded-sender';
-      if (!Classifier.isSupplierAllowed(message))         return 'sender-not-allowlisted';
-      if (!Classifier.threadHasReceiptSignal(thread))     return 'no-receipt-signal';
+      if (Classifier.hasAlreadyBeenForwarded(thread))       return 'already-forwarded';
+      if (Classifier.isExcludedSender(message))              return 'excluded-sender';
+      if (!Classifier.isSupplierAllowed(message))            return 'sender-not-allowlisted';
+      if (!Classifier.threadHasAllowedAttachment(thread))    return 'no-allowed-attachment';
       return null; // null = should forward
     },
 
