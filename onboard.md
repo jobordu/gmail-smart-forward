@@ -20,6 +20,8 @@ Before we start, ask me:
 
 Use these two values throughout the session when referencing config.
 
+The full phase-by-phase instructions are in `docs/rollout-guide.md`. The config variables and maintenance tasks are in `docs/config-reference.md`. Use these as your source of truth throughout the session.
+
 Work through these phases in order, one at a time:
 
 **Phase 0** — Clone, install Node dependencies, install clasp globally  
@@ -31,6 +33,6 @@ Work through these phases in order, one at a time:
 **Phase 6** — Set DRY_RUN=false, push, re-bootstrap, run backfillApprovedSuppliers, verify emails arrived at target inbox  
 **Phase 7** — Set ENABLE_LIVE_FORWARDING=true, push, re-bootstrap, run setupTrigger, verify trigger appears in the Apps Script Triggers panel  
 
-At the end, confirm the rollout checklist from README.md is complete.
+At the end, confirm the rollout checklist from `docs/rollout-guide.md` is complete.
 
 Start by asking me for the origin email and target email.
