@@ -1,0 +1,22 @@
+# Gitleaks configuration for gmail-smart-forward.
+# Docs: https://github.com/gitleaks/gitleaks
+
+title = "gmail-smart-forward"
+
+[extend]
+# Use the default ruleset as the base
+useDefault = true
+
+[allowlist]
+description = "Project-level allowlist"
+
+# Files that intentionally contain placeholder secrets or generated output
+paths = [
+  # Template file — contains placeholder values, not real secrets
+  '''.env\.example''',
+  # Auto-generated from .env, gitignored but allowlisted for gitleaks protect
+  '''src/_env\.js''',
+]
+
+# Commits to skip (add commit SHAs here if a historic commit has a false positive)
+commits = []

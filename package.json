@@ -8,7 +8,10 @@
     "pull": "clasp pull",
     "deploy": "npm run build-env && clasp push && clasp deploy",
     "open": "clasp open",
-    "logs": "clasp logs"
+    "logs": "clasp logs",
+    "install-hooks": "sh scripts/install-hooks.sh",
+    "secrets": "gitleaks detect --config .gitleaks.toml --redact -v",
+    "secrets:staged": "gitleaks protect --staged --config .gitleaks.toml --redact -v"
   },
   "devDependencies": {
     "@google/clasp": "^2.4.2",
