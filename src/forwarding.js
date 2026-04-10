@@ -21,13 +21,27 @@ var Forwarding = (function () {
     Log.forwarded(message, thread);
   }
 
-  return {
-    // Forward the most recent message in a thread and mark it.
-    forwardToTarget: function (thread) {
-      var messages = thread.getMessages();
-      var message  = messages[messages.length - 1]; // newest message
+  // Return only the messages in the thread that have at least one allowed attachment.
+  function _messagesWithAttachment(thread) {
+    return thread.getMessages().filter(function (msg) {
+      var attachments = msg.getAttachments();
+      for (var i = 0; i < attachments.length; i++) {
+        if (Classifier._hasAllowedExtension(attachments[i].getName())) return true;
+      }
+      return false;
+    });
+  }
 
-      _forward(message, thread);
+  return {
+    // Forward only the message(s) in the thread that contain an allowed attachment.
+    // If a thread has multiple qualifying messages (e.g. original invoice + revised copy),
+    // each is forwarded individually.
+    forwardToTarget: function (thread) {
+      var targets = _messagesWithAttachment(thread);
+
+      targets.forEach(function (message) {
+        _forward(message, thread);
+      });
 
       if (!Config.isDryRun()) {
         Labels.applyForwarded(thread);
