@@ -47,6 +47,13 @@ clasp create --title "Gmail Smart Forward" --type standalone --rootDir src
 
 This creates the project in your Google account and writes `.clasp.json` with the script ID.
 
+> **Opening the editor:** `clasp open` may not work in v3. Use the direct URL from `.clasp.json`:
+> `https://script.google.com/d/<scriptId>/edit`
+>
+> If you're signed into multiple Google accounts and get an "access denied" page, append
+> `?authuser=0`, `?authuser=1`, etc. until you land on the right account. Incognito with
+> only the target account signed in is the most reliable workaround.
+
 ### 5. Configure your .env
 
 ```bash
