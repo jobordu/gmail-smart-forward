@@ -3,7 +3,7 @@
 > [!TIP]
 > **Get started — give this prompt to your coding agent:**
 > ```
-> Clone https://github.com/Borduas-Holdings/gmail-smart-forward, then read onboard.md at the root — it contains your full instructions for onboarding me through this tool.
+> Clone https://github.com/jobordu/gmail-smart-forward, then read onboard.md at the root — it contains your full instructions for onboarding me through this tool.
 > ```
 
 ---
