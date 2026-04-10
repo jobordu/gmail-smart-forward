@@ -88,13 +88,25 @@ var Classifier = (function () {
       return Labels.isForwarded(thread);
     },
 
-    // Returns null if message should be forwarded, or a rejection reason string
+    // True if any message in the thread has a receipt signal (PDF or keyword).
+    // Checks all messages so reply threads don't lose their attachment signal.
+    threadHasReceiptSignal: function (thread) {
+      var messages = thread.getMessages();
+      for (var i = 0; i < messages.length; i++) {
+        if (Classifier.isForwardableReceipt(messages[i])) return true;
+      }
+      return false;
+    },
+
+    // Returns null if thread should be forwarded, or a rejection reason string.
+    // excluded-keyword is intentionally NOT checked for allowlisted senders —
+    // words like "unsubscribe" in footers or "sale" in "Sales Invoice" cause
+    // false positives on legitimate invoices from approved suppliers.
     classify: function (thread, message) {
-      if (Classifier.hasAlreadyBeenForwarded(thread))   return 'already-forwarded';
-      if (Classifier.isExcludedSender(message))          return 'excluded-sender';
-      if (!Classifier.isSupplierAllowed(message))        return 'sender-not-allowlisted';
-      if (Classifier.isExcludedMessage(message))         return 'excluded-keyword';
-      if (!Classifier.isForwardableReceipt(message))     return 'no-receipt-signal';
+      if (Classifier.hasAlreadyBeenForwarded(thread))    return 'already-forwarded';
+      if (Classifier.isExcludedSender(message))           return 'excluded-sender';
+      if (!Classifier.isSupplierAllowed(message))         return 'sender-not-allowlisted';
+      if (!Classifier.threadHasReceiptSignal(thread))     return 'no-receipt-signal';
       return null; // null = should forward
     },
 
