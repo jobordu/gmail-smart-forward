@@ -4,7 +4,7 @@
   "description": "Forward receipts/invoices from approved suppliers to a target email address",
   "scripts": {
     "build-env": "node scripts/build-env.js",
-    "push": "npm run build-env && clasp push --rootDir src",
+    "push": "npm run build-env && clasp push",
     "pull": "clasp pull",
     "deploy": "npm run build-env && clasp push && clasp deploy",
     "open": "clasp open",
@@ -14,7 +14,7 @@
     "secrets:staged": "gitleaks protect --staged --config .gitleaks.toml --redact -v"
   },
   "devDependencies": {
-    "@google/clasp": "^2.4.2",
+    "@google/clasp": "^3.3.0",
     "@types/google-apps-script": "^1.0.83",
     "dotenv": "^17.4.1"
   }
