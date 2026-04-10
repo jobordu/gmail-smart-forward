@@ -2,7 +2,7 @@
 
 **Give this prompt to your coding agent:**
 
-> Read `onboard.md` at the root of this repo — it contains your full instructions for onboarding me through this tool.
+> Clone https://github.com/Borduas-Holdings/gmail-smart-forward, then read `onboard.md` at the root — it contains your full instructions for onboarding me through this tool.
 
 ---
 
