@@ -4,7 +4,7 @@
 
 Please **do not** open a public GitHub issue for security vulnerabilities.
 
-Report vulnerabilities privately by emailing: **jonathan@digitalfrontier.so**
+Report vulnerabilities privately by emailing: **jonathanborduas@gmail.com**
 
 Include:
 - A description of the vulnerability

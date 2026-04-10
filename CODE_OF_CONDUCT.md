@@ -21,7 +21,7 @@ Examples of unacceptable behaviour:
 
 ## Enforcement
 
-Instances of unacceptable behaviour may be reported by contacting the project maintainer at **jonathan@digitalfrontier.so**. All complaints will be reviewed and investigated promptly and fairly.
+Instances of unacceptable behaviour may be reported by contacting the project maintainer at **jonathanborduas@gmail.com**. All complaints will be reviewed and investigated promptly and fairly.
 
 ## Attribution
 
