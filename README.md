@@ -78,13 +78,21 @@ This runs `build-env` (generates `src/_env.js` from `.env`) then pushes all file
 
 ### 7. Bootstrap Script Properties
 
-Open the Apps Script editor:
+Open the Apps Script editor at:
 
-```bash
-clasp open
+```
+https://script.google.com/d/<scriptId>/edit
 ```
 
-In the editor, select `bootstrapProperties` from the function dropdown and click **Run**.
+Replace `<scriptId>` with the value from `.clasp.json`. If you see an access denied page, append `?authuser=0` (or `1`, `2`) to the URL until you land on the right Google account.
+
+In the editor:
+
+1. Click **`setup.gs`** in the left file list
+2. In the function dropdown (next to the Run button, top toolbar), select **`bootstrapProperties`**
+3. Click **Run**
+
+You'll be prompted to grant Gmail permissions — approve them. Check **View → Execution log** to confirm properties were set.
 
 This writes all values from `.env` into Script Properties (the runtime config store) and creates the Gmail labels.
 
@@ -92,11 +100,19 @@ This writes all values from `.env` into Script Properties (the runtime config st
 
 ## Workflow
 
+> **How to run any function in the editor:**
+> 1. Click the relevant `.gs` file in the left file list
+> 2. Select the function name from the dropdown in the top toolbar (next to the Run button)
+> 3. Click **Run**
+> 4. View output via **View → Execution log**
+
 ### Phase 1 — Discovery
 
-Run `discoverSuppliers()` in the Apps Script editor.
+1. Click **`discovery.gs`** in the file list
+2. Select **`discoverSuppliers`** from the dropdown → click **Run**
+3. Open **View → Execution log**
 
-Check the execution log. You'll see a ranked list of senders with:
+You'll see a ranked list of senders with:
 - total emails
 - PDF attachment count
 - sample subjects
@@ -105,26 +121,26 @@ Check the execution log. You'll see a ranked list of senders with:
 
 ### Phase 2 — Build your allowlist
 
-Edit `.env` and fill in the senders/domains you trust:
+Edit `.env` and fill in the senders/domains you trust from the discovery output:
 
 ```
 ALLOWED_SENDERS=billing@stripe.com,noreply@shopify.com
 ALLOWED_DOMAINS=xero.com,quickbooks.com
 ```
 
-Then push the updated config:
+Then push and re-apply:
 
 ```bash
 npm run push
 ```
 
-Run `bootstrapProperties()` again in the Apps Script editor to apply the new values.
+In the editor: **`setup.gs`** → **`bootstrapProperties`** → **Run**
 
 ### Phase 3 — Dry-run backfill
 
-Run `dryRunBackfill()` in the Apps Script editor.
+In the editor: **`backfill.gs`** → **`dryRunBackfill`** → **Run**
 
-Check the log — it shows exactly which emails would be forwarded and why each rejection was made. No emails are sent.
+Check **View → Execution log** — it shows exactly which emails would be forwarded and the rejection reason for every skip. No emails are sent.
 
 ### Phase 4 — Real backfill
 
@@ -140,7 +156,9 @@ Then:
 npm run push
 ```
 
-Run `bootstrapProperties()` in the editor, then run `backfillApprovedSuppliers()`.
+In the editor: **`setup.gs`** → **`bootstrapProperties`** → **Run**
+
+Then: **`backfill.gs`** → **`backfillApprovedSuppliers`** → **Run**
 
 All forwarded threads are labeled `revolut-forwarded` for idempotency.
 
@@ -158,11 +176,13 @@ Then:
 npm run push
 ```
 
-Run `bootstrapProperties()`, then run `setupTrigger()` in the editor.
+In the editor: **`setup.gs`** → **`bootstrapProperties`** → **Run**
+
+Then: **`setup.gs`** → **`setupTrigger`** → **Run**
 
 This installs a time-driven trigger that calls `processLiveEmails()` every 15 minutes.
 
-To stop live forwarding at any time, run `removeTrigger()` in the editor.
+To stop live forwarding at any time: **`setup.gs`** → **`removeTrigger`** → **Run**
 
 ---
 
