@@ -120,6 +120,29 @@ function migrateLabels() {
   Logger.log('Migration complete.');
 }
 
+// Remove all gmail-smart-forward/* labels from every thread that carries them.
+// Use this to reset state before a fresh backfill (e.g. after changing the allowlist).
+// Does NOT delete the label objects themselves — only strips them from threads.
+function clearAllLabels() {
+  var labels = [
+    { name: Config.getForwardedLabel(),  label: Labels.getForwarded()  },
+    { name: Config.getRejectedLabel(),   label: Labels.getRejected()   },
+    { name: Config.getCandidateLabel(),  label: Labels.getCandidate()  },
+    { name: Config.getDiscoveredLabel(), label: Labels.getDiscovered() },
+  ];
+
+  labels.forEach(function (entry) {
+    var threads = entry.label.getThreads();
+    Logger.log('Clearing "' + entry.name + '" from ' + threads.length + ' threads...');
+    threads.forEach(function (thread) {
+      thread.removeLabel(entry.label);
+    });
+    Logger.log('Done.');
+  });
+
+  Logger.log('All labels cleared. You can now run a fresh backfill.');
+}
+
 // Quick smoke test — does not send any email.
 function testSetup() {
   validateConfig();
