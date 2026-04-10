@@ -41,11 +41,17 @@ All labels are nested under `gmail-smart-forward/` and visible as a group in Gma
 3. In the editor: `setup.gs` → `bootstrapProperties` → Run
 4. In the editor: `backfill.gs` → `backfillApprovedSuppliers` → Run (picks up any past emails from them)
 
-**Resetting all labels (fresh backfill)**
+**Changing the target email / starting completely fresh**
 
-In the editor: `setup.gs` → `clearAllLabels` → Run
+Use this when you want to re-forward everything to a new address, as if the tool had never run.
 
-This strips all labels from tagged threads without deleting the label objects. Run before a fresh backfill after major allowlist changes.
+1. Update `FORWARD_TO_EMAIL` in `.env`
+2. `npm run push`
+3. In the editor: `setup.gs` → `bootstrapProperties` → Run
+4. In the editor: `setup.gs` → `clearAllLabels` → Run *(removes forwarded/rejected labels from all threads)*
+5. In the editor: `backfill.gs` → `backfillApprovedSuppliers` → Run *(re-forwards everything to the new address)*
+
+`clearAllLabels` strips all `gmail-smart-forward/*` labels from tagged threads without deleting the label objects themselves. Every thread becomes eligible for re-processing.
 
 **Migrating label names**
 
