@@ -3,10 +3,10 @@
 // All runtime config comes from Script Properties (config.js).
 
 var LABEL_NAMES = {
-  CANDIDATE:  'revolut-candidate',
-  FORWARDED:  'revolut-forwarded',
-  REJECTED:   'revolut-rejected',
-  DISCOVERED: 'revolut-discovered',
+  CANDIDATE:  'gmail-smart-forward/candidate',
+  FORWARDED:  'gmail-smart-forward/forwarded',
+  REJECTED:   'gmail-smart-forward/rejected',
+  DISCOVERED: 'gmail-smart-forward/discovered',
 };
 
 var DEFAULT_SUBJECT_KEYWORDS = [

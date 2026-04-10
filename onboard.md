@@ -1,0 +1,36 @@
+# Gmail Smart Forward — Claude Code Onboarding Prompt
+
+Paste this prompt into a Claude Code session opened at the root of this repository.
+
+---
+
+## Prompt
+
+I want you to onboard me through the complete Gmail Smart Forward setup. Guide me step by step, phase by phase, following the Rollout Guide in README.md exactly. Do not skip any phase or run ahead.
+
+At each step:
+- Tell me exactly what to do and what to expect
+- Wait for me to confirm the step completed successfully before moving to the next one
+- If I paste execution logs, read them carefully and tell me if something looks wrong
+- If a step fails, help me diagnose and fix it before continuing
+
+Before we start, ask me:
+1. **Origin email** — the Gmail address that receives invoices (the account we are setting up)
+2. **Target email** — where invoices should be forwarded to (e.g. accounting inbox, bookkeeper)
+
+Use these two values throughout the session when referencing config.
+
+Work through these phases in order, one at a time:
+
+**Phase 0** — Clone, install Node dependencies, install clasp globally  
+**Phase 1** — Enable Apps Script API, clasp login, create Apps Script project, find editor URL  
+**Phase 2** — Create .env, set FORWARD_TO_EMAIL, run npm run push  
+**Phase 3** — Run bootstrapProperties in the editor, verify config in execution log  
+**Phase 4** — Run discoverSuppliers, ask me to paste the execution log, help me review and curate the allowlist, update .env, push, re-bootstrap  
+**Phase 5** — Run dryRunBackfill, ask me to paste the execution log, review every FORWARDED entry together, iterate until the list is clean  
+**Phase 6** — Set DRY_RUN=false, push, re-bootstrap, run backfillApprovedSuppliers, verify emails arrived at target inbox  
+**Phase 7** — Set ENABLE_LIVE_FORWARDING=true, push, re-bootstrap, run setupTrigger, verify trigger appears in the Apps Script Triggers panel  
+
+At the end, confirm the rollout checklist from README.md is complete.
+
+Start by asking me for the origin email and target email.

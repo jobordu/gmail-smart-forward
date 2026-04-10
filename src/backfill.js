@@ -23,9 +23,17 @@ function backfillApprovedSuppliers() {
   _runBackfill();
 }
 
+function _shuffle(arr) {
+  for (var i = arr.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+  return arr;
+}
+
 function _runBackfill() {
   var afterDate = Config.getBackfillAfterDate();
-  var threads   = GmailSearch.forBackfill(afterDate);
+  var threads   = _shuffle(GmailSearch.forBackfill(afterDate));
   var limit     = Config.getMaxEmailsPerRun();
   var processed = 0;
 
@@ -42,10 +50,10 @@ function _runBackfill() {
       Forwarding.forwardToTarget(thread);
       processed++;
     } else {
-      // Only log rejections — don't apply the rejected label during backfill
-      // to keep the inbox clean. Only label what was actually forwarded.
-      var m = messages[messages.length - 1];
-      Log.rejected(m, thread, reason);
+      // Label rejections so subsequent runs skip already-evaluated threads
+      // (idempotency). Only threads not yet labeled forwarded or rejected
+      // will appear in the next run's candidate pool.
+      Forwarding.markRejected(thread, reason);
     }
   }
 

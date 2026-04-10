@@ -84,6 +84,42 @@ function validateConfig() {
   Logger.log('Current config: ' + JSON.stringify(Config.dump(), null, 2));
 }
 
+// Migrate threads from old label names to the current configured label names.
+// Safe to run multiple times — skips threads already carrying the new label.
+// After migration, manually delete the old labels in Gmail Settings > Labels.
+function migrateLabels() {
+  var MIGRATIONS = [
+    { from: 'revolut-forwarded',  to: Config.getForwardedLabel()  },
+    { from: 'revolut-rejected',   to: Config.getRejectedLabel()   },
+    { from: 'revolut-candidate',  to: Config.getCandidateLabel()  },
+    { from: 'revolut-discovered', to: Config.getDiscoveredLabel() },
+  ];
+
+  MIGRATIONS.forEach(function (m) {
+    var oldLabel = GmailApp.getUserLabelByName(m.from);
+    if (!oldLabel) {
+      Logger.log('Skipping "' + m.from + '" — label does not exist.');
+      return;
+    }
+
+    // Ensure the new label exists
+    var newLabel = GmailApp.getUserLabelByName(m.to);
+    if (!newLabel) newLabel = GmailApp.createLabel(m.to);
+
+    var threads = oldLabel.getThreads();
+    Logger.log('Migrating "' + m.from + '" → "' + m.to + '" (' + threads.length + ' threads)');
+
+    threads.forEach(function (thread) {
+      thread.addLabel(newLabel);
+      thread.removeLabel(oldLabel);
+    });
+
+    Logger.log('Done. You can now delete the "' + m.from + '" label in Gmail Settings > Labels.');
+  });
+
+  Logger.log('Migration complete.');
+}
+
 // Quick smoke test — does not send any email.
 function testSetup() {
   validateConfig();

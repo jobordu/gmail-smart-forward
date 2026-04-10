@@ -55,6 +55,7 @@ var GmailSearch = (function () {
     forBackfill: function (afterDateStr) {
       var parts = [
         '-label:' + Config.getForwardedLabel(),
+        '-label:' + Config.getRejectedLabel(),
         '-in:sent',
         '-in:drafts',
       ];
@@ -65,7 +66,7 @@ var GmailSearch = (function () {
       var subjectKw = Config.getSubjectKeywords();
       var kwQuery = subjectKw.map(function (kw) { return '"' + kw + '"'; }).join(' OR ');
       parts.push('(subject:(' + kwQuery + ') OR filename:pdf OR filename:invoice OR filename:receipt)');
-      return _search(parts.join(' '), Config.getMaxEmailsPerRun() * 4);
+      return _search(parts.join(' '), 1000);
     },
 
     // Live search: threads from the last N minutes not yet forwarded

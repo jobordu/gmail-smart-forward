@@ -35,6 +35,18 @@ for (const key of KEYS) {
   }
 }
 
+// Auto-derive BACKFILL_AFTER_DATE from DISCOVERY_DAYS if not explicitly set.
+if (!props['BACKFILL_AFTER_DATE']) {
+  const days = parseInt(props['DISCOVERY_DAYS'] || '365', 10);
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  const yyyy = d.getFullYear();
+  const mm   = String(d.getMonth() + 1).padStart(2, '0');
+  const dd   = String(d.getDate()).padStart(2, '0');
+  props['BACKFILL_AFTER_DATE'] = `${yyyy}/${mm}/${dd}`;
+  console.log(`Auto-computed BACKFILL_AFTER_DATE=${props['BACKFILL_AFTER_DATE']} (${days} days ago)`);
+}
+
 const lines = Object.entries(props).map(
   ([k, v]) => `  ${k}: ${JSON.stringify(v)},`
 );
