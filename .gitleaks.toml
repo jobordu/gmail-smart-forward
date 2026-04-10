@@ -16,6 +16,8 @@ paths = [
   '''.env\.example''',
   # Auto-generated from .env, gitignored but allowlisted for gitleaks protect
   '''src/_env\.js''',
+  # detect-secrets baseline — contains hashed (non-reversible) secret fingerprints
+  '''\.secrets\.baseline''',
 ]
 
 # Commits to skip (add commit SHAs here if a historic commit has a false positive)
