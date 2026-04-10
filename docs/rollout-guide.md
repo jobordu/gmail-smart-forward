@@ -4,8 +4,8 @@ Follow these phases in order. Do not skip the dry-run — it is your safety net.
 
 ## What you need before starting
 
-- A Google account (the one that receives invoices)
-- The target email address where invoices should be forwarded
+- A Google account (the one that receives the emails you want to forward)
+- The target email address where matched emails should be forwarded
 - Node.js v18+ installed locally
 - A terminal
 
@@ -17,7 +17,7 @@ Follow these phases in order. Do not skip the dry-run — it is your safety net.
 git clone https://github.com/jobordu/gmail-smart-forward
 cd gmail-smart-forward
 npm install
-npm install -g @google/clasp
+npm install -g @google/clasp   # requires clasp v3+
 npm run install-hooks
 ```
 
@@ -35,7 +35,7 @@ Visit **https://script.google.com/home/usersettings** and turn on the **Google A
 clasp login
 ```
 
-A browser window opens. Sign in with the Google account that receives invoices and approve the permissions. This creates a local credential file (`~/.clasprc.json`).
+A browser window opens. Sign in with the Google account that receives the emails you want to forward, and approve the permissions. This creates a local credential file (`~/.clasprc.json`).
 
 > If you have multiple Google accounts in your browser and land on the wrong one, use incognito mode with only the target account signed in.
 
@@ -72,7 +72,7 @@ cp .env.example .env
 Open `.env` and fill in at minimum:
 
 ```
-FORWARD_TO_EMAIL=accounting@yourcompany.com   # where invoices get forwarded TO
+FORWARD_TO_EMAIL=accounting@yourcompany.com   # where matched emails get forwarded TO
 ```
 
 Leave `ALLOWED_SENDERS` and `ALLOWED_DOMAINS` empty for now — you'll fill these in after discovery.
@@ -149,7 +149,7 @@ In the editor: **`backfill.gs`** → **`dryRunBackfill`** → **Run**
 Open **View → Execution log** and review every `FORWARDED` entry:
 
 - Is the sender correct? (should be one of your allowlisted suppliers)
-- Does the subject look like an invoice or receipt?
+- Does the subject match your use case?
 - Does the date range look right?
 
 Also review the `REJECTED` entries — if you see a legitimate supplier being rejected with `sender-not-allowlisted`, add them to `ALLOWED_SENDERS` and repeat this phase.

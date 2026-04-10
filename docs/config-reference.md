@@ -6,11 +6,12 @@ All values live in `.env` locally. After any edit, run `npm run push` then `boot
 
 | Key | Default | Description |
 |---|---|---|
-| `FORWARD_TO_EMAIL` | *(required)* | Target email address invoices are forwarded to |
+| `FORWARD_TO_EMAIL` | *(required)* | Target email address matched emails are forwarded to |
 | `ALLOWED_SENDERS` | *(empty)* | Comma-separated approved sender emails |
 | `ALLOWED_DOMAINS` | *(empty)* | Comma-separated approved sender domains |
 | `EXCLUDED_SENDERS` | *(empty)* | Always block these senders |
 | `EXCLUDED_DOMAINS` | *(empty)* | Always block these domains |
+| `ATTACHMENT_EXTENSIONS` | `pdf` | Comma-separated file extensions (without dot) that count as valid attachments |
 | `DISCOVERY_DAYS` | `365` | How many days back discovery and backfill scan |
 | `BACKFILL_AFTER_DATE` | *(auto)* | Backfill window start (YYYY/MM/DD). Auto-computed as `today - DISCOVERY_DAYS` if not set. Override to pin a fixed date. |
 | `DRY_RUN` | `true` | Set to `false` to forward for real |
