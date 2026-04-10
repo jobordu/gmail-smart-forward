@@ -23,7 +23,12 @@ This milestone transforms Gmail Smart Forward from a tool for technical users in
   3. User sees a summary of all collected values and must confirm before `.env` is written
   4. After a completed setup run, `.env` contains all required keys with valid values
   5. Re-running setup on an existing `.env` updates values without losing comments or unrelated keys
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] v1.0-01-01-PLAN.md — Wave 0: Install Jest and create test scaffolding (stub test files)
+- [ ] v1.0-01-02-PLAN.md — Wave 1: TDD implementation of env-parser, validators, keyword-gen libraries
+- [ ] v1.0-01-03-PLAN.md — Wave 1: Setup wizard entry point (scripts/setup.js) + npm run setup wire-up
 
 ### Phase v1.0-02: Config Validation
 **Goal**: Invalid configuration is caught and described precisely before it can cause a silent failure in Apps Script.
@@ -67,7 +72,7 @@ Phases execute in sequence: v1.0-01 → v1.0-02 → v1.0-03 → v1.0-04
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| v1.0-01. Setup Wizard | 0/TBD | Not started | - |
+| v1.0-01. Setup Wizard | 0/3 | Planned | - |
 | v1.0-02. Config Validation | 0/TBD | Not started | - |
 | v1.0-03. Rollout + Status | 0/TBD | Not started | - |
 | v1.0-04. Allowlist Management | 0/TBD | Not started | - |
