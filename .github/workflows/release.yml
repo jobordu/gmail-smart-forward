@@ -23,20 +23,18 @@ jobs:
       - name: Extract changelog entry
         id: changelog
         run: |
-          VERSION="${{ steps.version.outputs.VERSION }}" node -e "
-            const fs = require('fs');
-            const version = process.env.VERSION;
-            const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
-            const escaped = version.replace(/[.*+?^\${}()|[\]\\\\]/g, '\\\\$&');
-            const re = new RegExp('##\\\\s*\\\\[' + escaped + '\\\\][^]*?(?=##\\\\s*\\\\[|---|\$)', 'm');
-            const match = changelog.match(re);
-            if (match) {
-              let body = match[0].replace(/##\\s*\\[.*?\\]\\s*—\\s*\\d{4}-\\d{2}-\\d{2}\\s*/, '').trim();
-              console.log(body);
-            } else {
-              console.log('See CHANGELOG.md for details.');
-            }
-          " > release_body.md
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          # Extract the section for this version from CHANGELOG.md
+          # Uses awk to grab everything between the version header and the next version header
+          awk -v ver="$VERSION" '
+            /^## \[/ { found = ($0 ~ "\\[" ver "\\]"); next }
+            found && /^---/ { next }
+            found { print }
+          ' CHANGELOG.md > release_body.md
+          # Fallback if nothing extracted
+          if [ ! -s release_body.md ]; then
+            echo "See CHANGELOG.md for details." > release_body.md
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2
