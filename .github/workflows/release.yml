@@ -23,16 +23,15 @@ jobs:
       - name: Extract changelog entry
         id: changelog
         run: |
-          version="${{ steps.version.outputs.VERSION }}"
-          # Extract the section for this version from CHANGELOG.md
-          node -e "
+          VERSION="${{ steps.version.outputs.VERSION }}" node -e "
             const fs = require('fs');
+            const version = process.env.VERSION;
             const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
             const escaped = version.replace(/[.*+?^\${}()|[\]\\\\]/g, '\\\\$&');
-            const re = new RegExp('##\\\\s*\\\\[' + escaped + '\\\\][^]*?(?=##\\\\s*\\\\[|<-->\$|$)', 'm');
+            const re = new RegExp('##\\\\s*\\\\[' + escaped + '\\\\][^]*?(?=##\\\\s*\\\\[|---|\$)', 'm');
             const match = changelog.match(re);
             if (match) {
-              let body = match[0].replace(/##\s*\[${escaped}\]\s*—\s*\d{4}-\d{2}-\d{2}\s*/, '').trim();
+              let body = match[0].replace(/##\\s*\\[.*?\\]\\s*—\\s*\\d{4}-\\d{2}-\\d{2}\\s*/, '').trim();
               console.log(body);
             } else {
               console.log('See CHANGELOG.md for details.');
