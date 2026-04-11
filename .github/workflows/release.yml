@@ -24,9 +24,9 @@ jobs:
         id: changelog
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
-          # Extract the section for this version from CHANGELOG.md
-          # Uses awk to grab everything between the version header and the next version header
-          awk -v ver="$VERSION" '
+          # Strip leading 'v' to match CHANGELOG format [1.1.0] not [v1.1.0]
+          VER_NUM="${VERSION#v}"
+          awk -v ver="$VER_NUM" '
             /^## \[/ { found = ($0 ~ "\\[" ver "\\]"); next }
             found && /^---/ { next }
             found { print }
