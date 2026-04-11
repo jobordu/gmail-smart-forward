@@ -66,5 +66,7 @@ var Log = (function () {
     },
 
     getEntries: function () { return _entries.slice(); },
+
+    __reset: function () { _entries = []; },
   };
 })();

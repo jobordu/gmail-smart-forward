@@ -6,6 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.0] — 2026-04-11
+
+### Added
+- LLM invoice classification: optional AI-based verification using vision models (email body + PDF) via any OpenAI-compatible provider
+- Full test suite: 203 tests with 95%+ coverage across 13 test files, GAS mock system, and custom Jest transform
+- ESLint setup with flat config (ESLint 9), `npm run lint` and `npm run lint:fix` scripts
+- Pre-push git hook: gitleaks scans all commits before they reach the remote
+- CI workflow for tests (`test.yml`): runs Jest on every push/PR to main
+- CI workflow for lint (`lint.yml`): runs ESLint on every push/PR to main
+- Release workflow (`release.yml`): auto-creates GitHub Releases from CHANGELOG.md on `v*` tag push
+- `DEVELOPMENT.md`: architecture overview, data flow, testing guide, code style, dev workflow
+- `CONTRIBUTORS.md`: contributor recognition
+- `.github/FUNDING.yml`: GitHub Sponsors link
+- `.github/CODEOWNERS`: automatic PR review assignments
+- `.github/ISSUE_TEMPLATE/config.yml`: disables blank issues, points to Discussions
+- GitHub Discussions enabled for community Q&A
+- `.env.example` expanded with LLM config variables and provider options
+- Denylist support: `EXCLUDED_SENDERS`, `EXCLUDED_DOMAINS`, `EXCLUDED_KEYWORDS`
+- `ATTACHMENT_EXTENSIONS` config: configurable file type filter (default: `pdf`)
+
+### Changed
+- All GitHub Actions pinned to commit SHAs (not mutable tags) for supply chain security
+- `install-hooks.sh` now installs both pre-commit and pre-push hooks
+- Classifier excludes denylisted keywords for non-allowlisted senders only (avoids false positives on "Sales Invoice" from approved suppliers)
+- Backfill supports per-sender processing via `backfillSender()`
+
+### Removed
+- Stale `.planning/` research and phase plan documents (project shipped, no longer needed)
+
+---
+
 ## [1.0.0] — 2026-04-10
 
 ### Added

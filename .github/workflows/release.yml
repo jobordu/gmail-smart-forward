@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+
+      - name: Extract changelog entry
+        id: changelog
+        run: |
+          version="${{ steps.version.outputs.VERSION }}"
+          # Extract the section for this version from CHANGELOG.md
+          node -e "
+            const fs = require('fs');
+            const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
+            const escaped = version.replace(/[.*+?^\${}()|[\]\\\\]/g, '\\\\$&');
+            const re = new RegExp('##\\\\s*\\\\[' + escaped + '\\\\][^]*?(?=##\\\\s*\\\\[|<-->\$|$)', 'm');
+            const match = changelog.match(re);
+            if (match) {
+              let body = match[0].replace(/##\s*\[${escaped}\]\s*—\s*\d{4}-\d{2}-\d{2}\s*/, '').trim();
+              console.log(body);
+            } else {
+              console.log('See CHANGELOG.md for details.');
+            }
+          " > release_body.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2
+        with:
+          body_path: release_body.md
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}

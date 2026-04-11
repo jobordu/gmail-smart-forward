@@ -80,12 +80,18 @@ var Config = (function () {
     getMaxEmailsPerRun:     function () { return _getInt('MAX_EMAILS_PER_RUN', DEFAULT_MAX_EMAILS_PER_RUN); },
     isLiveForwardingEnabled: function () { return _getBool('ENABLE_LIVE_FORWARDING', false); },
 
-    // LLM (future)
-    getLlmApiKey: function () { return _get('LLM_API_KEY', null); },
-    getLlmModel:  function () { return _get('LLM_MODEL', null); },
+    // LLM invoice classification (multimodal — email + PDF)
+    getLlmApiKey:             function () { return _get('LLM_API_KEY', null); },
+    getLlmModel:              function () { return _get('LLM_MODEL', 'google/gemma-4-31b-it'); },
+    getLlmBaseUrl:            function () { return _get('LLM_BASE_URL', 'https://api.together.xyz/v1'); },
+    getLlmConfidenceThreshold: function () {
+      var raw = parseFloat(_get('LLM_CONFIDENCE_THRESHOLD', '0.7'));
+      return isNaN(raw) ? 0.7 : raw;
+    },
     isLlmEnabled: function () { return _getBool('ENABLE_LLM_CLASSIFICATION', false); },
 
-    // Dump for debugging
+    __reset: function () { _props = null; },
+
     dump: function () {
       return {
         forwardToEmail:      _get('FORWARD_TO_EMAIL', '(not set)'),

@@ -12,4 +12,8 @@ fi
 
 cp "$SCRIPTS_DIR/pre-commit" "$HOOKS_DIR/pre-commit"
 chmod +x "$HOOKS_DIR/pre-commit"
-echo "Installed pre-commit hook."
+
+cp "$SCRIPTS_DIR/pre-push" "$HOOKS_DIR/pre-push"
+chmod +x "$HOOKS_DIR/pre-push"
+
+echo "Installed pre-commit and pre-push hooks."

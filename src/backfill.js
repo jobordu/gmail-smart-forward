@@ -2,9 +2,9 @@
 // Historical forwarding. Respects DRY_RUN flag.
 // dryRunBackfill() forces dry-run regardless of config.
 // backfillApprovedSuppliers() uses config as-is (should set DRY_RUN=false when ready).
+// backfillSender(email) processes only emails from a specific sender.
 
 function dryRunBackfill() {
-  // Temporarily override isDryRun for this call
   var realIsDryRun = Config.isDryRun;
   Config.isDryRun = function () { return true; };
   try {
@@ -21,6 +21,51 @@ function backfillApprovedSuppliers() {
   }
   Log.info('Starting backfill', { dryRun: Config.isDryRun() });
   _runBackfill();
+}
+
+function backfillSender(senderEmail) {
+  if (!senderEmail) {
+    Logger.log('Usage: backfillSender("invoice+statements@stripe.com")');
+    return;
+  }
+
+  var query = [
+    'from:' + senderEmail,
+    'filename:pdf',
+    '-label:' + Config.getForwardedLabel(),
+    '-label:' + Config.getRejectedLabel(),
+    '-in:sent',
+    '-in:drafts',
+  ].join(' ');
+
+  Log.info('Starting sender backfill', { sender: senderEmail, dryRun: Config.isDryRun() });
+
+  var threads = GmailApp.search(query, 0, Config.getMaxEmailsPerRun());
+  if (!threads || threads.length === 0) {
+    Logger.log('No threads found from ' + senderEmail + ' with PDF attachments.');
+    return;
+  }
+
+  Log.info('Sender backfill threads found', { sender: senderEmail, count: threads.length });
+
+  var processed = 0;
+  for (var i = 0; i < threads.length; i++) {
+    var thread   = threads[i];
+    var messages = thread.getMessages();
+    var message  = messages[messages.length - 1];
+
+    var reason = Classifier.classify(thread, message);
+
+    if (reason === null) {
+      Forwarding.forwardToTarget(thread);
+      processed++;
+    } else {
+      Forwarding.markRejected(thread, reason);
+    }
+  }
+
+  Log.info('Sender backfill done', { sender: senderEmail, processed: processed, dryRun: Config.isDryRun() });
+  Log.printSummary();
 }
 
 function _shuffle(arr) {

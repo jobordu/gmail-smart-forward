@@ -121,6 +121,21 @@ var Classifier = (function () {
       if (Classifier.isExcludedSender(message))              return 'excluded-sender';
       if (!Classifier.isSupplierAllowed(message))            return 'sender-not-allowlisted';
       if (!Classifier.threadHasAllowedAttachment(thread))    return 'no-allowed-attachment';
+
+      if (Config.isLlmEnabled()) {
+        try {
+          var result = LlmClassifier.classifyInvoice(message, thread);
+          var threshold = Config.getLlmConfidenceThreshold();
+          if (!result.is_invoice || result.confidence < threshold) {
+            Log.info('LLM rejected: confidence=' + result.confidence + ' reason=' + result.reason);
+            return 'llm-not-invoice';
+          }
+        } catch (e) {
+          // Fail-open: log the error but do not block forwarding
+          Log.info('LLM classification error (skipping): ' + e.message);
+        }
+      }
+
       return null; // null = should forward
     },
 

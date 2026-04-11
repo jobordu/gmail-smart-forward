@@ -1,0 +1,39 @@
+#!/bin/sh
+# Pre-push hook: full gitleaks scan on all commits about to be pushed.
+# Install via: npm run install-hooks
+
+remote="$1"
+url="$2"
+
+if ! command -v gitleaks > /dev/null 2>&1; then
+  echo "⚠️  gitleaks not found — skipping secret scan."
+  echo "   Install it: https://github.com/gitleaks/gitleaks#installing"
+  echo "   Or via brew: brew install gitleaks"
+  exit 0
+fi
+
+zero="0000000000000000000000000000000000000000"
+
+while read local_ref local_hash remote_ref remote_hash; do
+  if [ "$local_hash" = "$zero" ]; then
+    continue
+  fi
+
+  if [ "$remote_hash" = "$zero" ]; then
+    range="$local_hash"
+  else
+    range="$remote_hash..$local_hash"
+  fi
+
+  gitleaks detect --config .gitleaks.toml --redact -v --log-opts="$range"
+
+  if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ gitleaks found potential secrets in commits about to be pushed."
+    echo "   Review the output above and remove the secret."
+    echo "   If it is a false positive, add it to .gitleaks.toml allowlist."
+    exit 1
+  fi
+done
+
+exit 0

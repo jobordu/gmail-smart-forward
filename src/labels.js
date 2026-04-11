@@ -56,5 +56,7 @@ var Labels = (function () {
     isForwarded: function (thread) {
       return _hasLabel(thread, Labels.getForwarded());
     },
+
+    __reset: function () { _cache = {}; },
   };
 })();

@@ -3,3 +3,4 @@ node_modules/
 src/_env.js
 .clasp.json
 .claude/
+coverage/

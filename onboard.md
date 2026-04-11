@@ -20,6 +20,16 @@ Before we start, ask me:
 3. **Use case** — what kind of emails should be forwarded? Default: supplier invoices / receipts forwarded to a Revolut or accounting inbox. Other examples: shipping notifications, legal documents, payslips…
 4. **Languages** — what language(s) do these emails arrive in? (e.g. English, Portuguese, French, Spanish…)
 5. **File types** — what attachment types should trigger forwarding? Default: `pdf`. Other examples: `pdf,xlsx` or `pdf,xml`.
+6. **LLM classification** (optional) — do you want to enable AI-based invoice verification? This sends the email and PDF to a vision model for higher-precision detection. Requires a Together AI API key (get one at https://api.together.ai). Answer yes/no — if yes, ask for the key now.
+
+If LLM classification is enabled, set these in `.env` during Phase 2:
+```
+ENABLE_LLM_CLASSIFICATION=true
+LLM_API_KEY=<their key>
+LLM_BASE_URL=https://api.together.xyz/v1
+LLM_MODEL=google/gemma-4-31b-it
+LLM_CONFIDENCE_THRESHOLD=0.7
+```
 
 Use the origin and target emails throughout the session when referencing config.
 
@@ -38,7 +48,7 @@ We progress through three safety states. Never skip ahead — each state require
 Work through these phases in order, one at a time:
 
 **Phase 0** — Clone, install Node dependencies, install clasp globally  
-**Phase 1** — Enable Apps Script API, clasp login, create Apps Script project, find editor URL  
+**Phase 1** — Enable Apps Script API, clasp login, create Apps Script project, find editor URL. When sharing the editor URL, append `?authuser=0` (or `?authuser=1`, `?authuser=2` etc.) to force it to open with the correct Google account if the user has multiple accounts signed in.  
 **Phase 2** — Create .env, set FORWARD_TO_EMAIL, run npm run push — confirm we are in State 1 (DRY_RUN=true, ENABLE_LIVE_FORWARDING=false)  
 **Phase 3** — Run bootstrapProperties in the editor, verify config in execution log  
 **Phase 4** — Run discoverSuppliers, ask me to paste the execution log, help me review and curate the allowlist, update .env, push, re-bootstrap  
