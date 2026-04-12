@@ -69,7 +69,7 @@ var LlmClassifier = (function () {
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user',   content: userContent   }
       ],
-      max_tokens: 150,
+      max_tokens: 2000,
       temperature: 0,
       response_format: { type: 'json_object' }
     };

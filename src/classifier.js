@@ -119,7 +119,14 @@ var Classifier = (function () {
     classify: function (thread, message) {
       if (Classifier.hasAlreadyBeenForwarded(thread))       return 'already-forwarded';
       if (Classifier.isExcludedSender(message))              return 'excluded-sender';
-      if (!Classifier.isSupplierAllowed(message))            return 'sender-not-allowlisted';
+      // If the latest message's sender is not allowlisted, scan all messages
+      // in the thread. Supports daisy-chain forwarding where multiple people
+      // forward invoices through gmail-smart-forward in sequence.
+      if (!Classifier.isSupplierAllowed(message)) {
+        var allowed = Classifier.findAllowlistedMessage(thread);
+        if (!allowed) return 'sender-not-allowlisted';
+        message = allowed;
+      }
       if (!Classifier.threadHasAllowedAttachment(thread))    return 'no-allowed-attachment';
 
       if (Config.isLlmEnabled()) {
@@ -137,6 +144,18 @@ var Classifier = (function () {
       }
 
       return null; // null = should forward
+    },
+
+    // Find the most recent allowlisted, non-excluded message in a thread.
+    // Returns the message, or null if none found.
+    findAllowlistedMessage: function (thread) {
+      var messages = thread.getMessages();
+      for (var i = messages.length - 1; i >= 0; i--) {
+        if (Classifier.isSupplierAllowed(messages[i]) && !Classifier.isExcludedSender(messages[i])) {
+          return messages[i];
+        }
+      }
+      return null;
     },
 
     // Expose helper for discovery reporting
