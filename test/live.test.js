@@ -102,6 +102,81 @@ describe('processLiveEmails', () => {
     expect(rejectedEntry).toBeDefined();
   });
 
+  test('labels rejected threads in live mode', () => {
+    mockPropsStore.ENABLE_LIVE_FORWARDING = 'true';
+    mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+    Config.__reset();
+
+    const msg = createMockMessage({
+      from: '<unknown@other.com>',
+      attachments: [],
+    });
+    const thread = createMockThread({ messages: [msg] });
+    mockGmailApp.search.mockReturnValue([thread]);
+
+    processLiveEmails();
+
+    const rejectedLabel = mockLabelsRegistry['gmail-smart-forward/rejected'];
+    expect(thread.addLabel).toHaveBeenCalledWith(rejectedLabel);
+  });
+
+  test('does not label already-forwarded threads as rejected', () => {
+    mockPropsStore.ENABLE_LIVE_FORWARDING = 'true';
+    mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+    Config.__reset();
+
+    const att = createMockAttachment('invoice.pdf');
+    const msg = createMockMessage({
+      from: '<supplier@example.com>',
+      attachments: [att],
+    });
+    const fwdLabel = Labels.getForwarded();
+    const thread = createMockThread({ messages: [msg], labels: [fwdLabel] });
+    mockGmailApp.search.mockReturnValue([thread]);
+
+    processLiveEmails();
+
+    expect(thread.addLabel).not.toHaveBeenCalledWith(
+      mockLabelsRegistry['gmail-smart-forward/rejected']
+    );
+  });
+
+  test('labels multiple rejected threads', () => {
+    mockPropsStore.ENABLE_LIVE_FORWARDING = 'true';
+    mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+    Config.__reset();
+
+    const msg1 = createMockMessage({ from: '<unknown1@other.com>', attachments: [] });
+    const thread1 = createMockThread({ messages: [msg1] });
+    const msg2 = createMockMessage({ from: '<unknown2@other.com>', attachments: [] });
+    const thread2 = createMockThread({ messages: [msg2] });
+    mockGmailApp.search.mockReturnValue([thread1, thread2]);
+
+    processLiveEmails();
+
+    const rejectedLabel = mockLabelsRegistry['gmail-smart-forward/rejected'];
+    expect(thread1.addLabel).toHaveBeenCalledWith(rejectedLabel);
+    expect(thread2.addLabel).toHaveBeenCalledWith(rejectedLabel);
+  });
+
+  test('rejected threads skip re-evaluation on next run', () => {
+    mockPropsStore.ENABLE_LIVE_FORWARDING = 'true';
+    mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+    Config.__reset();
+
+    const msg = createMockMessage({
+      from: '<unknown@other.com>',
+      attachments: [],
+    });
+    const rejectedLabel = Labels.getRejected();
+    const thread = createMockThread({ messages: [msg], labels: [rejectedLabel] });
+    mockGmailApp.search.mockReturnValue([thread]);
+
+    processLiveEmails();
+
+    expect(msg.forward).not.toHaveBeenCalled();
+  });
+
   test('logs live run info', () => {
     mockPropsStore.ENABLE_LIVE_FORWARDING = 'true';
     Config.__reset();

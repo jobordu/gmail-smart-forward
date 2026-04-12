@@ -1,6 +1,17 @@
 #!/bin/sh
-# Pre-push hook: full gitleaks scan on all commits about to be pushed.
+# Pre-push hook: run tests, then full gitleaks scan on all commits about to be pushed.
 # Install via: npm run install-hooks
+
+echo "Running tests..."
+npx jest --testPathIgnorePatterns=e2e-llm --forceExit --no-coverage --silent 2>/dev/null
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ Tests failed. Fix them before pushing."
+  exit 1
+fi
+
+echo "Tests passed."
 
 remote="$1"
 url="$2"

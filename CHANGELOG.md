@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.0] — 2026-04-12
+
+### Added
+- `status()` command: shows current state, trigger status, forward-to email, allowlists, LLM status, label thread counts, and config validation — run from the Apps Script editor
+- Enhanced `validateConfig()`: returns `{ errors, warnings }` with checks for email format, allowlist/denylist overlaps, empty extensions, dot-prefixed extensions, live mode without allowlist, LLM completeness, and confidence threshold range
+- `npm run validate`: local `.env` validation before push — catches config mistakes before they reach Apps Script
+- Pre-push test hook: Jest runs before every push — broken tests can't reach main
+- Auto-generated test transform: `npm run generate-transform` scans `/* exported */` directives and generates the GAS module transform (no more manual sync)
+- Dependabot config for npm and GitHub Actions (monthly)
+- 37 new tests (259 total, 99.8% coverage)
+
+### Fixed
+- Live mode now labels rejected threads (`Labels.applyRejected()`) so they aren't re-evaluated every 15 minutes
+- Live mode skips labeling `already-forwarded` threads as rejected
+- Added missing `/* exported */` directives to `classifier.js` and `labels.js`
+- Daisy-chain forwarding: `findAllowlistedMessage()` scans all messages for an allowlisted sender, supporting N-level deep forwarding chains (merged from #2)
+- LLM `max_tokens` increased from 150 to 2000 to support thinking models (merged from #2)
+
+### Changed
+- Dropped interactive CLI wizard from roadmap — agent-guided onboarding via `onboard.md` already covers this
+
+---
+
 ## [1.3.0] — 2026-04-12
 
 ### Added

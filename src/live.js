@@ -29,7 +29,8 @@ function processLiveEmails() {
     if (reason === null) {
       Forwarding.forwardToTarget(thread);
       processed++;
-    } else {
+    } else if (reason !== 'already-forwarded') {
+      Labels.applyRejected(thread);
       var m = messages[messages.length - 1];
       Log.rejected(m, thread, reason);
     }

@@ -1,3 +1,4 @@
+/* exported Labels */
 // labels.js
 // Create, retrieve, and apply Gmail labels safely.
 

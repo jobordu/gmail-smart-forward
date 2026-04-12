@@ -1,3 +1,4 @@
+/* exported Classifier */
 // classifier.js
 // Core classification logic. All functions return boolean or a reason string.
 
