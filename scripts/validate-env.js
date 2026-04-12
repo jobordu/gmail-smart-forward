@@ -64,7 +64,7 @@ if (process.env.ENABLE_LLM_CLASSIFICATION === 'true') {
 }
 
 const envPath = path.resolve(__dirname, '../.env');
-if (!fs.existsSync(envPath)) {
+if (!fs.existsSync(envPath) && !process.env.FORWARD_TO_EMAIL) {
   errors.push('.env file not found. Copy .env.example to .env and fill in your values.');
 }
 

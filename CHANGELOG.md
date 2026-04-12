@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.6.1] — 2026-04-12
+
+### Fixed
+- Exclude `smoke-test.js` from Jest coverage collection (was causing 0% coverage failure in CI)
+- Update `.secrets.baseline` to mark `test-key` strings in test files as non-secrets (was causing detect-secrets CI failure)
+- Skip `.env` file existence check when env vars are already provided (fixes `validate-env.test.js` on CI where no `.env` exists)
+- Add `_shuffle` to `/* exported */` in `backfill.js` and regenerate test transform (was causing 3 test failures)
+
+---
+
 ## [1.6.0] — 2026-04-12
 
 ### Added

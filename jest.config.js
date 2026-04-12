@@ -25,5 +25,6 @@ module.exports = {
     'node_modules',
     '_env\\.js$',
     'appsscript\\.json$',
+    'smoke-test\\.js$',
   ],
 };

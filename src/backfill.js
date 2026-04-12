@@ -1,4 +1,4 @@
-/* exported dryRunBackfill, backfillApprovedSuppliers, backfillSender */
+/* exported dryRunBackfill, backfillApprovedSuppliers, backfillSender, _shuffle */
 // backfill.js
 // Historical forwarding. Respects DRY_RUN flag.
 // dryRunBackfill() forces dry-run regardless of config.

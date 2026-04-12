@@ -20,6 +20,7 @@ const knownNames = new Set([
 ]);
 
 const knownFunctions = new Set([
+  '_shuffle',
   'backfillApprovedSuppliers',
   'backfillSender',
   'bootstrapProperties',
