@@ -1,4 +1,4 @@
-/* exported bootstrapProperties, setupAll, setupLabels, setupTrigger, removeTrigger, validateConfig, migrateLabels, clearAllLabels, testSetup */
+/* exported bootstrapProperties, setupAll, setupLabels, setupTrigger, removeTrigger, validateConfig, status, migrateLabels, clearAllLabels, testSetup */
 // setup.js
 // Bootstrap utilities: label setup, trigger creation, config validation.
 
@@ -63,26 +63,135 @@ function removeTrigger() {
 
 function validateConfig() {
   var errors = [];
+  var warnings = [];
 
+  var email = null;
   try {
-    Config.getForwardToEmail();
+    email = Config.getForwardToEmail();
+    if (email && !/@/.test(email)) {
+      errors.push('FORWARD_TO_EMAIL "' + email + '" does not look like a valid email address.');
+    }
   } catch (_e) {
-    errors.push('FORWARD_TO_EMAIL is not set.');
+    errors.push('FORWARD_TO_EMAIL is not set. This is required for forwarding to work.');
   }
 
   var senders = Config.getAllowedSenders();
   var domains = Config.getAllowedDomains();
   if (senders.length === 0 && domains.length === 0) {
-    errors.push('No ALLOWED_SENDERS or ALLOWED_DOMAINS set. Discovery will work but backfill/live will forward nothing.');
+    warnings.push('No ALLOWED_SENDERS or ALLOWED_DOMAINS set. Discovery will work but backfill/live will forward nothing.');
   }
 
-  if (errors.length > 0) {
-    Logger.log('CONFIG WARNINGS:\n' + errors.join('\n'));
+  var excludedSenders = Config.getExcludedSenders();
+  var excludedDomains = Config.getExcludedDomains();
+  excludedSenders.forEach(function (s) {
+    if (senders.indexOf(s) !== -1) {
+      errors.push('"' + s + '" is in both ALLOWED_SENDERS and EXCLUDED_SENDERS.');
+    }
+  });
+  excludedDomains.forEach(function (d) {
+    if (domains.indexOf(d) !== -1) {
+      errors.push('"' + d + '" is in both ALLOWED_DOMAINS and EXCLUDED_DOMAINS.');
+    }
+  });
+
+  var extensions = Config.getAttachmentExtensions();
+  var rawExtensions = PropertiesService.getScriptProperties().getProperty('ATTACHMENT_EXTENSIONS');
+  if (rawExtensions === '') {
+    errors.push('ATTACHMENT_EXTENSIONS is set but empty. No attachments will match — nothing will be forwarded.');
   } else {
+    extensions.forEach(function (ext) {
+      if (ext.indexOf('.') !== -1) {
+        warnings.push('ATTACHMENT_EXTENSIONS contains "' + ext + '" with a dot prefix. Use plain extensions (e.g. "pdf" not ".pdf").');
+      }
+    });
+  }
+
+  var live = Config.isLiveForwardingEnabled();
+  if (live && senders.length === 0 && domains.length === 0) {
+    errors.push('ENABLE_LIVE_FORWARDING is true but no allowlist is configured. Nothing will be forwarded.');
+  }
+
+  if (Config.isLlmEnabled()) {
+    var apiKey = Config.getLlmApiKey();
+    if (!apiKey) {
+      errors.push('ENABLE_LLM_CLASSIFICATION is true but LLM_API_KEY is not set.');
+    }
+    var threshold = Config.getLlmConfidenceThreshold();
+    if (threshold < 0 || threshold > 1) {
+      errors.push('LLM_CONFIDENCE_THRESHOLD must be between 0 and 1, got ' + threshold + '.');
+    }
+  }
+
+  var result = { errors: errors, warnings: warnings };
+
+  if (errors.length > 0) {
+    Logger.log('CONFIG ERRORS:\n' + errors.join('\n'));
+  }
+  if (warnings.length > 0) {
+    Logger.log('CONFIG WARNINGS:\n' + warnings.join('\n'));
+  }
+  if (errors.length === 0 && warnings.length === 0) {
     Logger.log('Config looks good.');
   }
 
   Logger.log('Current config: ' + JSON.stringify(Config.dump(), null, 2));
+  return result;
+}
+
+function status() {
+  var dryRun = Config.isDryRun();
+  var live = Config.isLiveForwardingEnabled();
+  var state;
+  if (dryRun && !live) {
+    state = 'Preview (DRY_RUN=true, ENABLE_LIVE_FORWARDING=false)';
+  } else if (!dryRun && !live) {
+    state = 'Backfill (DRY_RUN=false, ENABLE_LIVE_FORWARDING=false)';
+  } else if (!dryRun && live) {
+    state = 'Live (DRY_RUN=false, ENABLE_LIVE_FORWARDING=true)';
+  } else {
+    state = 'Invalid (DRY_RUN=true, ENABLE_LIVE_FORWARDING=true) — live forwarding is enabled but dry-run is also on.';
+  }
+
+  var triggers = ScriptApp.getProjectTriggers();
+  var hasTrigger = false;
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === 'processLiveEmails') {
+      hasTrigger = true;
+      break;
+    }
+  }
+
+  var labelCounts = {};
+  var labelNames = [
+    { key: 'Candidate', getter: Labels.getCandidate },
+    { key: 'Forwarded', getter: Labels.getForwarded },
+    { key: 'Rejected',  getter: Labels.getRejected },
+    { key: 'Discovered', getter: Labels.getDiscovered },
+  ];
+  labelNames.forEach(function (entry) {
+    var label = entry.getter();
+    labelCounts[entry.key] = label ? label.getThreads().length : 0;
+  });
+
+  Logger.log('=== STATUS ===');
+  Logger.log('State: ' + state);
+  Logger.log('Trigger: ' + (hasTrigger ? 'Active (processLiveEmails every 15 min)' : 'Not installed'));
+  Logger.log('Forward to: ' + (function () { try { return Config.getForwardToEmail(); } catch (_e) { return '(not set)'; } })());
+  Logger.log('Allowed senders: ' + Config.getAllowedSenders().join(', ') || '(none)');
+  Logger.log('Allowed domains: ' + Config.getAllowedDomains().join(', ') || '(none)');
+  Logger.log('LLM classification: ' + (Config.isLlmEnabled() ? 'Enabled (' + Config.getLlmModel() + ')' : 'Disabled'));
+  Logger.log('Labels:');
+  Logger.log('  Candidate:  ' + labelCounts.Candidate + ' threads');
+  Logger.log('  Forwarded:  ' + labelCounts.Forwarded + ' threads');
+  Logger.log('  Rejected:   ' + labelCounts.Rejected + ' threads');
+  Logger.log('  Discovered: ' + labelCounts.Discovered + ' threads');
+
+  var validation = validateConfig();
+  if (validation.errors.length === 0 && validation.warnings.length === 0) {
+    Logger.log('Config validation: OK');
+  } else {
+    Logger.log('Config validation: ' + validation.errors.length + ' error(s), ' + validation.warnings.length + ' warning(s)');
+  }
 }
 
 // Migrate threads from old label names to the current configured label names.

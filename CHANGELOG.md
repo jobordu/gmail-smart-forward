@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.0] — 2026-04-12
+
+### Added
+- `status()` command: shows current state, trigger status, forward-to email, allowlists, LLM status, label thread counts, and config validation summary — run directly from the Apps Script editor
+- Enhanced `validateConfig()`: now returns `{ errors, warnings }` and checks email format, allowlist/denylist overlaps, empty attachment extensions, dot-prefixed extensions, live forwarding without allowlist, LLM config completeness, and confidence threshold range
+- 22 new tests (225 total, 99.8% coverage)
+- Release process documentation in DEVELOPMENT.md
+
+### Changed
+- Dropped interactive CLI wizard from roadmap — agent-guided onboarding via onboard.md already covers this better than a Node CLI could
+
+---
+
 ## [1.2.0] — 2026-04-12
 
 ### Added

@@ -34,6 +34,7 @@ const knownFunctions = new Set([
   'migrateLabels',
   'clearAllLabels',
   'testSetup',
+  'status',
 ]);
 
 module.exports = {

@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A serverless Gmail forwarder built on Google Apps Script that automatically forwards emails from allowlisted senders matching keyword and attachment criteria to a target inbox. No external services, no hosting cost — runs entirely on a free personal Gmail account. The next milestone focuses on making configuration dramatically easier: replacing manual .env editing and Apps Script function runs with a guided, interactive experience.
+A serverless Gmail forwarder built on Google Apps Script that automatically forwards emails from allowlisted senders matching keyword and attachment criteria to a target inbox. No external services, no hosting cost — runs entirely on a free personal Gmail account. Setup is handled by a coding agent that reads onboard.md and guides the user through each phase — no separate wizard needed.
 
 ## Core Value
 
@@ -27,12 +27,9 @@ Every forwarded email is one the user actually wanted — zero false positives, 
 
 ### Active
 
-- [ ] Interactive CLI wizard for first-time setup (replaces manual .env editing)
-- [ ] In-script allowlist management without touching .env (add/remove senders from Apps Script editor)
-- [ ] Guided dry-run review with structured output (replace raw execution log parsing)
-- [ ] Config validation with clear error messages before push
-- [ ] One-command rollout progression (preview → backfill → live as a single guided flow)
 - [ ] Status command showing current mode, trigger state, and label counts
+- [ ] Config validation with clear error messages before push
+- [ ] In-script allowlist management without touching .env (add/remove senders from Apps Script editor)
 
 ### Out of Scope
 
@@ -40,10 +37,11 @@ Every forwarded email is one the user actually wanted — zero false positives, 
 - OAuth / multi-account management — complexity out of proportion to benefit for personal use
 - Real-time forwarding (push notifications) — Apps Script time-driven triggers are sufficient and simpler
 - AI-based classification — keyword matching is intentional (user controls exactly what forwards)
+- Interactive CLI wizard — the agent-guided onboarding via onboard.md already covers this better than a Node CLI could
 
 ## Context
 
-The tool works today and is production-ready for technical users. The pain point is setup friction: users must manually edit .env files, understand clasp, navigate the Apps Script editor to run specific functions in the right order, and interpret raw execution logs. The onboarding prompt (onboard.md) patches this with a Claude Code session, but a proper interactive experience built into the tool itself would remove the dependency on AI-assisted setup entirely.
+The tool works today and is production-ready for technical users. Setup friction is handled by the onboarding prompt (onboard.md), which guides a coding agent through the full rollout. The remaining gaps are runtime observability (status command) and safety nets (config validation) — things the agent can't provide once the user is running the tool on their own.
 
 Stack: Google Apps Script (ES5-compatible JavaScript), clasp for deployment, Node.js scripts for build tooling. The constraint is Apps Script — no npm packages available at runtime, no async/await, no modules.
 
@@ -62,8 +60,8 @@ Stack: Google Apps Script (ES5-compatible JavaScript), clasp for deployment, Nod
 | No external hosting | Keeps the tool free and simple for personal use | ✓ Good |
 | ES5-only Apps Script | Google's runtime constraint — cannot use modern JS | ✓ Good — accepted |
 | Keyword matching over ML | User needs deterministic control over what forwards | ✓ Good |
+| Agent-guided onboarding over CLI wizard | Agent reads logs, adapts to errors, generates keywords — CLI can't match that | ✓ Good |
 | .env → Script Properties pattern | Keeps secrets out of source, clasp handles deployment | ✓ Good — keep for now |
-| Interactive CLI wizard | Best UX improvement within Node.js tooling layer | — Pending |
 
 ---
 *Last updated: 2026-04-10 after initialization*

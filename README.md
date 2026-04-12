@@ -1,7 +1,7 @@
 # Gmail Smart Forward
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.2.0-brightgreen.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.3.0-brightgreen.svg)](CHANGELOG.md)
 [![Tests](https://img.shields.io/badge/tests-203%20passing-success.svg)](test/)
 [![Coverage](https://img.shields.io/badge/coverage-99%25-success.svg)](coverage/)
 
