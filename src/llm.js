@@ -21,27 +21,115 @@ var LlmClassifier = (function () {
 
   var PDF_TEXT_LIMIT = 3000;
 
+  function _extractPdfTextViaDocumentApp(blob) {
+    try {
+      var tempFile = DriveApp.createFile(blob);
+      tempFile.setTrashed(true);
+      var doc = DocumentApp.openById(tempFile.getId());
+      var text = doc.getBody().getText();
+      if (text && text.trim().length > 0) {
+        return text.substring(0, PDF_TEXT_LIMIT);
+      }
+    } catch (e) {
+      Log.info('DocumentApp extraction failed: ' + e.message);
+    }
+    return null;
+  }
+
+  function _extractPdfTextFromRawBytes(blob) {
+    try {
+      var raw = blob.getDataAsString();
+      var textParts = [];
+      var streamRe = /stream\r?\n([\s\S]*?)\r?\nendstream/g;
+      var match;
+      while ((match = streamRe.exec(raw)) !== null) {
+        var stream = match[1];
+        var textRe = /\(([^\\)]*(?:\\.[^\\)]*)*)\)/g;
+        var tm;
+        while ((tm = textRe.exec(stream)) !== null) {
+          textParts.push(tm[1].replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\\\/g, '\\').replace(/\\\(/g, '(').replace(/\\\)/g, ')'));
+        }
+        var hexRe = /<([0-9A-Fa-f]+)>/g;
+        var hm;
+        while ((hm = hexRe.exec(stream)) !== null) {
+          var hex = hm[1];
+          var decoded = '';
+          for (var k = 0; k + 1 < hex.length; k += 2) {
+            decoded += String.fromCharCode(parseInt(hex.substr(k, 2), 16));
+          }
+          if (decoded.trim().length > 0 && /[a-zA-Z]{3,}/.test(decoded)) {
+            textParts.push(decoded);
+          }
+        }
+      }
+      var combined = textParts.join(' ').replace(/\s+/g, ' ').trim();
+      if (combined.length > 20) {
+        return combined.substring(0, PDF_TEXT_LIMIT);
+      }
+    } catch (e) {
+      Log.info('Raw bytes extraction failed: ' + e.message);
+    }
+    return null;
+  }
+
+  function _buildMetadataFallback(attachment, allAttachments) {
+    var parts = [];
+    var name = attachment.getName();
+    parts.push('Filename: ' + name);
+
+    try {
+      var blob = attachment.copyBlob();
+      var bytes = blob.getBytes();
+      parts.push('Size: ' + bytes.length + ' bytes');
+    } catch (_e) {
+      // skip size
+    }
+
+    try {
+      parts.push('Content-Type: ' + attachment.getContentType());
+    } catch (_e) {
+    }
+
+    if (allAttachments && allAttachments.length > 1) {
+      var names = [];
+      for (var i = 0; i < allAttachments.length; i++) {
+        names.push(allAttachments[i].getName());
+      }
+      parts.push('All attachments: ' + names.join(', '));
+    }
+
+    return '[PDF metadata] ' + parts.join(', ');
+  }
+
   function _extractPdfText(thread) {
     var messages = thread.getMessages();
+    var allAttachments = [];
     for (var i = 0; i < messages.length; i++) {
       var attachments = messages[i].getAttachments();
-      for (var j = 0; j < attachments.length; j++) {
-        var att = attachments[j];
+      for (var a = 0; a < attachments.length; a++) {
+        allAttachments.push(attachments[a]);
+      }
+    }
+
+    for (var mi = 0; mi < messages.length; mi++) {
+      var msgsAttachments = messages[mi].getAttachments();
+      for (var j = 0; j < msgsAttachments.length; j++) {
+        var att = msgsAttachments[j];
         if (att.getName().toLowerCase().endsWith('.pdf')) {
-          try {
-            var blob = att.copyBlob();
-            var contentType = blob.getContentType();
-            if (contentType === 'application/pdf' || contentType === 'application/x-pdf') {
-              var tempFile = DriveApp.createFile(blob);
-              tempFile.setTrashed(true);
-              var doc = DocumentApp.openById(tempFile.getId());
-              var text = doc.getBody().getText();
-              return text.substring(0, PDF_TEXT_LIMIT);
-            }
-          } catch (e) {
-            Log.info('PDF text extraction failed, falling back to filename: ' + e.message);
+          var blob = att.copyBlob();
+          var contentType = blob.getContentType();
+          if (contentType === 'application/pdf' || contentType === 'application/x-pdf') {
+            var text;
+
+            text = _extractPdfTextViaDocumentApp(blob);
+            if (text) return text;
+
+            text = _extractPdfTextFromRawBytes(blob);
+            if (text) return text;
+
+            return _buildMetadataFallback(att, allAttachments);
           }
-          return '[PDF attachment: ' + att.getName() + ']';
+          return _buildMetadataFallback(att, allAttachments);
         }
       }
     }

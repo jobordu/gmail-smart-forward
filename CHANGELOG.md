@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.5.0] — 2026-04-12
+
+### Added
+- 3-tier PDF text extraction fallback chain in `llm.js`:
+  - **Tier 1**: `DocumentApp` via Google Drive (existing — works for text-based PDFs)
+  - **Tier 2**: Raw bytes extraction via `blob.getDataAsString()` — parses PDF stream objects for parenthesized text strings and hex-encoded strings, catches complex layouts and encrypted PDFs that DocumentApp can't handle
+  - **Tier 3**: Enriched metadata fallback — filename, size, content-type, and all attachment filenames across the entire thread
+- Multi-attachment awareness: metadata fallback lists all attachment filenames from every message in the thread, giving the LLM full context even when PDF text can't be extracted
+- 14 new tests for PDF extraction (273 total, 100% coverage on `llm.js`)
+
+### Changed
+- PDF test mocks now generate realistic PDF structure (`%PDF-1.4` header, obj/stream/endstream blocks, xref table, trailer) via `buildRealisticPdfContent()` helper
+
+---
+
 ## [1.4.0] — 2026-04-12
 
 ### Added

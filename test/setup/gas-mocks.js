@@ -118,13 +118,16 @@ function createMockLabel(name) {
 }
 
 function createMockAttachment(name, content) {
+  var rawContent = content || Buffer.from('pdf-content');
   var blob = {
     setContentType: jest.fn(function() { return this; }),
     getContentType: jest.fn(() => 'application/pdf'),
+    getBytes: jest.fn(() => rawContent),
+    getDataAsString: jest.fn(() => rawContent.toString('utf8')),
   };
   return {
     getName: jest.fn(() => name),
-    getBytes: jest.fn(() => content || Buffer.from('pdf-content')),
+    getBytes: jest.fn(() => rawContent),
     getContentType: jest.fn(() => 'application/pdf'),
     copyBlob: jest.fn(() => blob),
   };
@@ -226,3 +229,20 @@ function resetTestState(overrides) {
 
 global.resetTestState = resetTestState;
 global.defaultTestProps = defaultTestProps;
+
+function buildRealisticPdfContent(streams) {
+  var parts = ['%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n'];
+  for (var i = 0; i < streams.length; i++) {
+    var s = streams[i];
+    if (s.hex) {
+      parts.push((i + 2) + ' 0 obj\n<< /Length ' + s.hex.length + ' >>\nstream\n<' + s.hex + '>\nendstream\nendobj\n');
+    } else {
+      var text = s.text || '';
+      parts.push((i + 2) + ' 0 obj\n<< /Length ' + text.length + ' >>\nstream\n(' + text + ')\nendstream\nendobj\n');
+    }
+  }
+  parts.push('xref\n0 ' + (streams.length + 2) + '\ntrailer\n<< /Root 1 0 R >>\nstartxref\n0\n%%EOF');
+  return Buffer.from(parts.join(''));
+}
+
+global.buildRealisticPdfContent = buildRealisticPdfContent;

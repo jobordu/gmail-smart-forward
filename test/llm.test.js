@@ -401,6 +401,387 @@ describe('LlmClassifier', () => {
       expect(userContent).toContain('broken.pdf');
     });
 
+    test('tier 1: DocumentApp succeeds, skips raw bytes extraction', () => {
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      mockDocBody.getText.mockReturnValue('Invoice total: $500.00');
+      mockDriveApp.createFile.mockReturnValue({ getId: jest.fn(() => 'doc-id'), setTrashed: jest.fn() });
+
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.9,\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      var pdfAtt = createMockAttachment('invoice.pdf', buildRealisticPdfContent([{ text: 'dummy' }]));
+      var msg = createMockMessage({ subject: 'Invoice', body: 'Pay', attachments: [pdfAtt] });
+      var thread = createMockThread({ messages: [msg] });
+
+      LlmClassifier.classifyInvoice(msg, thread);
+
+      var fetchCall = UrlFetchApp.fetch.mock.calls[0];
+      var payload = JSON.parse(fetchCall[1].payload);
+      expect(payload.messages[1].content).toContain('Invoice total: $500.00');
+    });
+
+    test('tier 2: falls back to raw bytes when DocumentApp returns empty', () => {
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      mockDocBody.getText.mockReturnValue('');
+      mockDriveApp.createFile.mockReturnValue({ getId: jest.fn(() => 'doc-id'), setTrashed: jest.fn() });
+
+      var pdfContent = buildRealisticPdfContent([
+        { text: 'Invoice Number: INV-123' },
+        { text: 'Total Amount: $99.99' },
+      ]);
+
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.9,\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      var pdfAtt = createMockAttachment('invoice.pdf', pdfContent);
+      var msg = createMockMessage({ subject: 'Invoice', body: 'Pay', attachments: [pdfAtt] });
+      var thread = createMockThread({ messages: [msg] });
+
+      LlmClassifier.classifyInvoice(msg, thread);
+
+      var fetchCall = UrlFetchApp.fetch.mock.calls[0];
+      var payload = JSON.parse(fetchCall[1].payload);
+      var userContent = payload.messages[1].content;
+      expect(userContent).toContain('Invoice Number: INV-123');
+    });
+
+    test('tier 2: extracts hex-encoded text from PDF streams', () => {
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      mockDocBody.getText.mockReturnValue('');
+      mockDriveApp.createFile.mockReturnValue({ getId: jest.fn(() => 'doc-id'), setTrashed: jest.fn() });
+
+      var hex = Buffer.from('Invoice Date: 2025-01-15', 'utf8').toString('hex').toUpperCase();
+      var pdfContent = buildRealisticPdfContent([{ hex: hex }]);
+
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.9,\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      var pdfAtt = createMockAttachment('invoice.pdf', pdfContent);
+      var msg = createMockMessage({ subject: 'Invoice', body: 'Pay', attachments: [pdfAtt] });
+      var thread = createMockThread({ messages: [msg] });
+
+      LlmClassifier.classifyInvoice(msg, thread);
+
+      var fetchCall = UrlFetchApp.fetch.mock.calls[0];
+      var payload = JSON.parse(fetchCall[1].payload);
+      var userContent = payload.messages[1].content;
+      expect(userContent).toContain('Invoice Date: 2025-01-15');
+    });
+
+    test('tier 2: skips hex content with no recognizable words', () => {
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      mockDocBody.getText.mockReturnValue('');
+      mockDriveApp.createFile.mockReturnValue({ getId: jest.fn(() => 'doc-id'), setTrashed: jest.fn() });
+
+      var hex = Buffer.from('\x00\x01\x02\x03\x04', 'binary').toString('hex').toUpperCase();
+      var pdfContent = buildRealisticPdfContent([{ hex: hex }]);
+
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.7,\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      var pdfAtt = createMockAttachment('invoice.pdf', pdfContent);
+      var msg = createMockMessage({ subject: 'Invoice', body: 'Pay', attachments: [pdfAtt] });
+      var thread = createMockThread({ messages: [msg] });
+
+      LlmClassifier.classifyInvoice(msg, thread);
+
+      var fetchCall = UrlFetchApp.fetch.mock.calls[0];
+      var payload = JSON.parse(fetchCall[1].payload);
+      var userContent = payload.messages[1].content;
+      expect(userContent).toContain('PDF metadata');
+    });
+
+    test('tier 2: skips raw bytes when extracted text is too short', () => {
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      mockDocBody.getText.mockReturnValue('');
+      mockDriveApp.createFile.mockReturnValue({ getId: jest.fn(() => 'doc-id'), setTrashed: jest.fn() });
+
+      var pdfContent = buildRealisticPdfContent([{ text: 'ab' }]);
+
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.7,\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      var pdfAtt = createMockAttachment('invoice.pdf', pdfContent);
+      var msg = createMockMessage({ subject: 'Invoice', body: 'Pay', attachments: [pdfAtt] });
+      var thread = createMockThread({ messages: [msg] });
+
+      LlmClassifier.classifyInvoice(msg, thread);
+
+      var fetchCall = UrlFetchApp.fetch.mock.calls[0];
+      var payload = JSON.parse(fetchCall[1].payload);
+      var userContent = payload.messages[1].content;
+      expect(userContent).toContain('PDF metadata');
+    });
+
+    test('tier 3: falls back to metadata when both DocumentApp and raw bytes fail', () => {
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      mockDocBody.getText.mockReturnValue('');
+      mockDriveApp.createFile.mockReturnValue({ getId: jest.fn(() => 'doc-id'), setTrashed: jest.fn() });
+
+      var pdfContent = Buffer.from('not a valid pdf stream at all');
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.7,\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      var pdfAtt = createMockAttachment('scanned-invoice.pdf', pdfContent);
+      var msg = createMockMessage({ subject: 'Invoice', body: 'Pay', attachments: [pdfAtt] });
+      var thread = createMockThread({ messages: [msg] });
+
+      LlmClassifier.classifyInvoice(msg, thread);
+
+      var fetchCall = UrlFetchApp.fetch.mock.calls[0];
+      var payload = JSON.parse(fetchCall[1].payload);
+      var userContent = payload.messages[1].content;
+      expect(userContent).toContain('Filename: scanned-invoice.pdf');
+      expect(userContent).toContain('Size:');
+      expect(userContent).toContain('Content-Type:');
+    });
+
+    test('tier 3: metadata fallback works when content type is not PDF', () => {
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      var pdfAtt = createMockAttachment('invoice.pdf');
+      pdfAtt.copyBlob.mockReturnValue({
+        getContentType: jest.fn(() => 'application/octet-stream'),
+        getBytes: jest.fn(() => Buffer.from('bytes')),
+        getDataAsString: jest.fn(() => 'bytes'),
+      });
+
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.7,\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      var msg = createMockMessage({ subject: 'Invoice', body: 'Pay', attachments: [pdfAtt] });
+      var thread = createMockThread({ messages: [msg] });
+
+      LlmClassifier.classifyInvoice(msg, thread);
+
+      var fetchCall = UrlFetchApp.fetch.mock.calls[0];
+      var payload = JSON.parse(fetchCall[1].payload);
+      var userContent = payload.messages[1].content;
+      expect(userContent).toContain('PDF metadata');
+      expect(userContent).toContain('invoice.pdf');
+    });
+
+    test('tier 1: handles DocumentApp throw and falls back to raw bytes', () => {
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      mockDocumentApp.openById.mockImplementationOnce(() => {
+        throw new Error('Cannot open document');
+      });
+
+      var pdfContent = buildRealisticPdfContent([
+        { text: 'Bill To: Customer' },
+        { text: 'Amount: 100.00 EUR' },
+      ]);
+
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.9,\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      var pdfAtt = createMockAttachment('bill.pdf', pdfContent);
+      var msg = createMockMessage({ subject: 'Bill', body: 'Pay', attachments: [pdfAtt] });
+      var thread = createMockThread({ messages: [msg] });
+
+      LlmClassifier.classifyInvoice(msg, thread);
+
+      var fetchCall = UrlFetchApp.fetch.mock.calls[0];
+      var payload = JSON.parse(fetchCall[1].payload);
+      var userContent = payload.messages[1].content;
+      expect(userContent).toContain('Bill To: Customer');
+      expect(userContent).toContain('Amount: 100.00 EUR');
+    });
+
+    test('tier 2: handles raw bytes extraction exception gracefully', () => {
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      mockDocBody.getText.mockReturnValue('');
+      mockDriveApp.createFile.mockReturnValue({ getId: jest.fn(() => 'doc-id'), setTrashed: jest.fn() });
+
+      var pdfAtt = createMockAttachment('invoice.pdf');
+      var brokenBlob = {
+        getContentType: jest.fn(() => 'application/pdf'),
+        getBytes: jest.fn(() => Buffer.from('x')),
+        getDataAsString: jest.fn(() => { throw new Error('encoding error'); }),
+      };
+      pdfAtt.copyBlob.mockReturnValue(brokenBlob);
+
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.7,\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      var msg = createMockMessage({ subject: 'Invoice', body: 'Pay', attachments: [pdfAtt] });
+      var thread = createMockThread({ messages: [msg] });
+
+      LlmClassifier.classifyInvoice(msg, thread);
+
+      var fetchCall = UrlFetchApp.fetch.mock.calls[0];
+      var payload = JSON.parse(fetchCall[1].payload);
+      var userContent = payload.messages[1].content;
+      expect(userContent).toContain('PDF metadata');
+    });
+
+    test('tier 2: extracts text from multiple PDF streams', () => {
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      mockDocBody.getText.mockReturnValue('');
+      mockDriveApp.createFile.mockReturnValue({ getId: jest.fn(() => 'doc-id'), setTrashed: jest.fn() });
+
+      var pdfContent = buildRealisticPdfContent([
+        { text: 'Invoice Number: 42' },
+        { text: 'Total: 1000' },
+      ]);
+
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.9,\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      var pdfAtt = createMockAttachment('invoice.pdf', pdfContent);
+      var msg = createMockMessage({ subject: 'Invoice', body: 'Pay', attachments: [pdfAtt] });
+      var thread = createMockThread({ messages: [msg] });
+
+      LlmClassifier.classifyInvoice(msg, thread);
+
+      var fetchCall = UrlFetchApp.fetch.mock.calls[0];
+      var payload = JSON.parse(fetchCall[1].payload);
+      var userContent = payload.messages[1].content;
+      expect(userContent).toContain('Invoice Number: 42');
+      expect(userContent).toContain('Total: 1000');
+    });
+
+    test('metadata fallback lists all attachment filenames across thread', () => {
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      mockDocBody.getText.mockReturnValue('');
+      mockDriveApp.createFile.mockReturnValue({ getId: jest.fn(() => 'doc-id'), setTrashed: jest.fn() });
+
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.7,\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      const pdfAtt = createMockAttachment('invoice.pdf', Buffer.from('no streams here'));
+      const jpgAtt = createMockAttachment('preview.jpg');
+      const termsAtt = createMockAttachment('terms-and-conditions.pdf', Buffer.from('no streams'));
+      const msg1 = createMockMessage({ attachments: [jpgAtt] });
+      const msg2 = createMockMessage({ attachments: [pdfAtt, termsAtt] });
+      const thread = createMockThread({ messages: [msg1, msg2] });
+
+      LlmClassifier.classifyInvoice(msg1, thread);
+
+      const fetchCall = UrlFetchApp.fetch.mock.calls[0];
+      const payload = JSON.parse(fetchCall[1].payload);
+      const userContent = payload.messages[1].content;
+      expect(userContent).toContain('Filename: invoice.pdf');
+      expect(userContent).toContain('All attachments: preview.jpg, invoice.pdf, terms-and-conditions.pdf');
+    });
+
+    test('metadata fallback omits all-attachments list when only one attachment', () => {
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      mockDocBody.getText.mockReturnValue('');
+      mockDriveApp.createFile.mockReturnValue({ getId: jest.fn(() => 'doc-id'), setTrashed: jest.fn() });
+
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.7,\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      const pdfAtt = createMockAttachment('invoice.pdf', Buffer.from('no streams'));
+      const msg = createMockMessage({ attachments: [pdfAtt] });
+      const thread = createMockThread({ messages: [msg] });
+
+      LlmClassifier.classifyInvoice(msg, thread);
+
+      const fetchCall = UrlFetchApp.fetch.mock.calls[0];
+      const payload = JSON.parse(fetchCall[1].payload);
+      const userContent = payload.messages[1].content;
+      expect(userContent).toContain('Filename: invoice.pdf');
+      expect(userContent).not.toContain('All attachments:');
+    });
+
+    test('metadata fallback includes filenames from multiple messages', () => {
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      mockDocBody.getText.mockReturnValue('');
+      mockDriveApp.createFile.mockReturnValue({ getId: jest.fn(() => 'doc-id'), setTrashed: jest.fn() });
+
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.7,\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      const receiptPdf = createMockAttachment('receipt-march.pdf', Buffer.from('no streams'));
+      const msg1 = createMockMessage({ attachments: [createMockAttachment('logo.png')] });
+      const msg2 = createMockMessage({ attachments: [receiptPdf, createMockAttachment('details.docx')] });
+      const thread = createMockThread({ messages: [msg1, msg2] });
+
+      LlmClassifier.classifyInvoice(msg2, thread);
+
+      const fetchCall = UrlFetchApp.fetch.mock.calls[0];
+      const payload = JSON.parse(fetchCall[1].payload);
+      const userContent = payload.messages[1].content;
+      expect(userContent).toContain('All attachments: logo.png, receipt-march.pdf, details.docx');
+    });
+
+    test('tier 1 still returns text even when multiple PDFs exist', () => {
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      mockDocBody.getText.mockReturnValue('Invoice total: $250.00');
+      mockDriveApp.createFile.mockReturnValue({ getId: jest.fn(() => 'doc-id'), setTrashed: jest.fn() });
+
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.9,\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      const pdf1 = createMockAttachment('page-1.pdf');
+      const pdf2 = createMockAttachment('page-2.pdf');
+      const msg = createMockMessage({ attachments: [pdf1, pdf2] });
+      const thread = createMockThread({ messages: [msg] });
+
+      LlmClassifier.classifyInvoice(msg, thread);
+
+      const fetchCall = UrlFetchApp.fetch.mock.calls[0];
+      const payload = JSON.parse(fetchCall[1].payload);
+      expect(payload.messages[1].content).toContain('Invoice total: $250.00');
+    });
+
     test('truncates PDF text to 3000 characters', () => {
       mockPropsStore.LLM_API_KEY = 'test-key';
       Config.__reset();
