@@ -323,5 +323,164 @@ describe('Classifier', () => {
       const thread = createMockThread({ messages: [msg] });
       expect(Classifier.classify(thread, msg)).toBeNull();
     });
+
+    test('daisy-chain: forwards when latest sender is not allowlisted but earlier message is', () => {
+      mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+      mockPropsStore.ENABLE_LLM_CLASSIFICATION = 'false';
+      Config.__reset();
+
+      const att = createMockAttachment('invoice.pdf');
+      const supplierMsg = createMockMessage({
+        from: '<supplier@example.com>',
+        subject: 'Invoice #123',
+        attachments: [att],
+      });
+      const forwarderMsg = createMockMessage({
+        from: '<colleague@company.com>',
+        subject: 'Fwd: Invoice #123',
+      });
+      const thread = createMockThread({ messages: [supplierMsg, forwarderMsg] });
+      expect(Classifier.classify(thread, forwarderMsg)).toBeNull();
+    });
+
+    test('daisy-chain: rejects when no message in thread is from allowlisted sender', () => {
+      mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+      mockPropsStore.ENABLE_LLM_CLASSIFICATION = 'false';
+      Config.__reset();
+
+      const att = createMockAttachment('invoice.pdf');
+      const msg1 = createMockMessage({
+        from: '<random@other.com>',
+        subject: 'Invoice #123',
+        attachments: [att],
+      });
+      const msg2 = createMockMessage({
+        from: '<colleague@company.com>',
+        subject: 'Fwd: Invoice #123',
+      });
+      const thread = createMockThread({ messages: [msg1, msg2] });
+      expect(Classifier.classify(thread, msg2)).toBe('sender-not-allowlisted');
+    });
+
+    test('daisy-chain: rejects when latest sender is excluded even if earlier message is allowlisted', () => {
+      mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+      mockPropsStore.EXCLUDED_SENDERS = 'spam@bad.com';
+      mockPropsStore.ENABLE_LLM_CLASSIFICATION = 'false';
+      Config.__reset();
+
+      const att = createMockAttachment('invoice.pdf');
+      const supplierMsg = createMockMessage({
+        from: '<supplier@example.com>',
+        subject: 'Invoice #123',
+        attachments: [att],
+      });
+      const excludedMsg = createMockMessage({
+        from: '<spam@bad.com>',
+        subject: 'Fwd: Invoice #123',
+      });
+      const thread = createMockThread({ messages: [supplierMsg, excludedMsg] });
+      expect(Classifier.classify(thread, excludedMsg)).toBe('excluded-sender');
+    });
+
+    test('daisy-chain: multi-level forwarding finds allowlisted sender', () => {
+      mockPropsStore.ALLOWED_SENDERS = 'billing@stripe.com';
+      mockPropsStore.ENABLE_LLM_CLASSIFICATION = 'false';
+      Config.__reset();
+
+      const att = createMockAttachment('invoice.pdf');
+      const stripeMsg = createMockMessage({
+        from: '<billing@stripe.com>',
+        subject: 'Your Stripe invoice',
+        attachments: [att],
+      });
+      const personA = createMockMessage({
+        from: '<personA@gmail.com>',
+        subject: 'Fwd: Your Stripe invoice',
+      });
+      const personB = createMockMessage({
+        from: '<personB@gmail.com>',
+        subject: 'Fwd: Your Stripe invoice',
+      });
+      const thread = createMockThread({ messages: [stripeMsg, personA, personB] });
+      expect(Classifier.classify(thread, personB)).toBeNull();
+    });
+
+    test('daisy-chain: picks most recent allowlisted message', () => {
+      mockPropsStore.ALLOWED_SENDERS = 'a@supplier.com,b@supplier.com';
+      mockPropsStore.ENABLE_LLM_CLASSIFICATION = 'false';
+      Config.__reset();
+
+      const att = createMockAttachment('invoice.pdf');
+      const msgA = createMockMessage({
+        from: '<a@supplier.com>',
+        subject: 'Invoice from A',
+        attachments: [att],
+      });
+      const msgB = createMockMessage({
+        from: '<b@supplier.com>',
+        subject: 'Invoice from B',
+        attachments: [att],
+      });
+      const forwarderMsg = createMockMessage({
+        from: '<forwarder@company.com>',
+        subject: 'Fwd: Invoices',
+      });
+      const thread = createMockThread({ messages: [msgA, msgB, forwarderMsg] });
+      expect(Classifier.classify(thread, forwarderMsg)).toBeNull();
+    });
+  });
+
+  describe('findAllowlistedMessage', () => {
+    test('returns null when no messages are allowlisted', () => {
+      mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+      mockPropsStore.ALLOWED_DOMAINS = '';
+      Config.__reset();
+
+      const msg1 = createMockMessage({ from: '<random@other.com>' });
+      const msg2 = createMockMessage({ from: '<another@other.com>' });
+      const thread = createMockThread({ messages: [msg1, msg2] });
+      expect(Classifier.findAllowlistedMessage(thread)).toBeNull();
+    });
+
+    test('returns the most recent allowlisted message', () => {
+      mockPropsStore.ALLOWED_SENDERS = 'a@supplier.com,b@supplier.com';
+      Config.__reset();
+
+      const msgA = createMockMessage({ from: '<a@supplier.com>' });
+      const msgB = createMockMessage({ from: '<b@supplier.com>' });
+      const msgOther = createMockMessage({ from: '<other@company.com>' });
+      const thread = createMockThread({ messages: [msgA, msgB, msgOther] });
+      expect(Classifier.findAllowlistedMessage(thread)).toBe(msgB);
+    });
+
+    test('skips allowlisted messages that are also excluded', () => {
+      mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+      mockPropsStore.EXCLUDED_SENDERS = 'supplier@example.com';
+      Config.__reset();
+
+      const msg = createMockMessage({ from: '<supplier@example.com>' });
+      const thread = createMockThread({ messages: [msg] });
+      expect(Classifier.findAllowlistedMessage(thread)).toBeNull();
+    });
+
+    test('returns allowlisted message in single-message thread', () => {
+      mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+      Config.__reset();
+
+      const msg = createMockMessage({ from: '<supplier@example.com>' });
+      const thread = createMockThread({ messages: [msg] });
+      expect(Classifier.findAllowlistedMessage(thread)).toBe(msg);
+    });
+
+    test('matches by domain', () => {
+      mockPropsStore.ALLOWED_SENDERS = '';
+      mockPropsStore.ALLOWED_DOMAINS = 'supplier.com';
+      Config.__reset();
+
+      const msg = createMockMessage({ from: '<anyone@supplier.com>' });
+      const other = createMockMessage({ from: '<other@company.com>' });
+      const thread = createMockThread({ messages: [msg, other] });
+      expect(Classifier.findAllowlistedMessage(thread)).toBe(msg);
+    });
   });
 });
