@@ -55,7 +55,7 @@ const mockDocumentApp = {
 };
 
 const mockDriveApp = {
-  createFile: jest.fn(() => ({ getId: jest.fn(() => 'temp-drive-id-123') })),
+  createFile: jest.fn(() => ({ getId: jest.fn(() => 'temp-drive-id-123'), setTrashed: jest.fn() })),
   getFileById: jest.fn(() => mockDriveFile),
 };
 
@@ -214,7 +214,7 @@ function resetTestState(overrides) {
   });
 
   mockDocBody.getText.mockReturnValue('Invoice #INV-2025-0042\nDate: 2025-04-11\nAmount Due: EUR 1,250.00');
-  mockDriveApp.createFile.mockReturnValue({ getId: jest.fn(() => 'temp-drive-id-123') });
+  mockDriveApp.createFile.mockReturnValue({ getId: jest.fn(() => 'temp-drive-id-123'), setTrashed: jest.fn() });
   mockDriveApp.getFileById.mockReturnValue(mockDriveFile);
 
   jest.clearAllMocks();

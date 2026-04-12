@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.0] — 2026-04-12
+
+### Added
+- README badges for license, version, test count, and coverage
+- Release process documentation in DEVELOPMENT.md
+
+### Fixed
+- Eliminated all 26 ESLint `no-unused-vars` warnings by adding `sourceType: 'script'` and `/* exported */` directives for GAS global-scope declarations
+- `llm.js` coverage improved from 94% to 100% — fixed `mockDriveApp.createFile` mock missing `setTrashed` method
+- `package.json` version synced to match latest release tag (was 1.0.0, should have been 1.1.0)
+
+---
+
 ## [1.1.0] — 2026-04-11
 
 ### Added

@@ -150,6 +150,17 @@ Never skip states. Each transition requires explicit confirmation:
 | `npm run lint:fix` | Run ESLint with auto-fix |
 | `npm run install-hooks` | Install git pre-commit and pre-push hooks |
 
+## Release process
+
+1. Update `version` in `package.json` to the new version
+2. Add a changelog entry in `CHANGELOG.md` following the existing format (`## [x.y.z] — YYYY-MM-DD`)
+3. Commit with message `release: vX.Y.Z`
+4. Tag the commit: `git tag vX.Y.Z`
+5. Push commit + tag: `git push origin main --tags`
+6. The `release.yml` workflow auto-creates a GitHub Release from the CHANGELOG entry
+
+Pre-release versions (e.g. `1.2.0-beta.1`) are marked as pre-releases automatically.
+
 ## Further reading
 
 - [Rollout Guide](docs/rollout-guide.md) — step-by-step setup

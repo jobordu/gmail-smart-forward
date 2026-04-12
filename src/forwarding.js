@@ -1,3 +1,4 @@
+/* exported Forwarding */
 // forwarding.js
 // Actual email forwarding and thread marking.
 

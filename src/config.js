@@ -1,3 +1,4 @@
+/* exported Config */
 // config.js
 // Loads all runtime config from Script Properties.
 // Set these in Apps Script > Project Settings > Script Properties.

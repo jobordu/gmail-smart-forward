@@ -1,3 +1,4 @@
+/* exported Log */
 // logging.js
 // Structured logging helpers. Output goes to Apps Script execution log (Logger).
 

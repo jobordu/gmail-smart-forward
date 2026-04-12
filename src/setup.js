@@ -1,3 +1,4 @@
+/* exported bootstrapProperties, setupAll, setupLabels, setupTrigger, removeTrigger, validateConfig, migrateLabels, clearAllLabels, testSetup */
 // setup.js
 // Bootstrap utilities: label setup, trigger creation, config validation.
 
@@ -65,7 +66,7 @@ function validateConfig() {
 
   try {
     Config.getForwardToEmail();
-  } catch (e) {
+  } catch (_e) {
     errors.push('FORWARD_TO_EMAIL is not set.');
   }
 

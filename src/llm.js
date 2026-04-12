@@ -1,3 +1,4 @@
+/* exported LlmClassifier */
 // llm.js
 // OpenAI-compatible LLM client for invoice classification.
 // Works with any OpenAI-style provider: Together AI, AkashML, OpenAI, etc.

@@ -1,3 +1,4 @@
+/* exported LABEL_NAMES, DEFAULT_SUBJECT_KEYWORDS, DEFAULT_ATTACHMENT_KEYWORDS, DEFAULT_EXCLUDED_KEYWORDS, DEFAULT_ATTACHMENT_EXTENSIONS, DEFAULT_DISCOVERY_DAYS, DEFAULT_MAX_EMAILS_PER_RUN, DEFAULT_DRY_RUN */
 // constants.js
 // Static defaults — keyword lists, label names, limits.
 // All runtime config comes from Script Properties (config.js).

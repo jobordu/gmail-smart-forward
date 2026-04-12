@@ -1,3 +1,4 @@
+/* exported GmailSearch */
 // gmail-search.js
 // Gmail query helpers. All searches return GmailThread arrays.
 

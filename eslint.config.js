@@ -33,12 +33,13 @@ export default [
     files: ['src/**/*.js'],
     languageOptions: {
       ecmaVersion: 2020,
+      sourceType: 'script',
       globals: {
         ...gasGlobals,
       },
     },
     rules: {
-      'no-unused-vars': ['warn', { args: 'none', varsIgnorePattern: '^_' }],
+      'no-unused-vars': ['warn', { args: 'none', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
       'no-constant-condition': 'off',
       'no-empty': 'off',
       'no-redeclare': 'off',

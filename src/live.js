@@ -1,3 +1,4 @@
+/* exported processLiveEmails */
 // live.js
 // Scheduled processing for new/current emails.
 // Called by a time-driven trigger every 10–15 minutes.

@@ -1,3 +1,4 @@
+/* exported discoverSuppliers */
 // discovery.js
 // Read-only scan of historical email to surface likely suppliers.
 // No emails are forwarded or labeled during discovery.
