@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.6.0] — 2026-04-12
+
+### Added
+- `smokeTest()` function: run in the Apps Script editor to verify the full pipeline end-to-end — processes up to 10 real threads in forced dry-run mode (no side effects), checks config, labels, classification, forwarding, LLM, triggers, and PDF extraction with a pass/fail summary
+- Smart tier 1 skip: `DocumentApp` is only attempted when the blob content type is `application/vnd.google-apps.document` — no more wasted Drive API calls for regular PDFs
+- Multi-attachment metadata fallback: tier 3 now lists all attachment filenames across every message in the thread when there are multiple attachments
+- Detailed tier logging: each extraction tier logs what it did (skipped, extracted N chars from N segments, or fell back)
+- `AGENTS.md` with project context and Apps Script editor URL guidance for coding agents
+
+### Changed
+- Removed outer content-type check from `_extractPdfText` — each tier now decides independently if it can handle the file
+- PDF test mocks now use `buildRealisticPdfContent()` with proper `%PDF-1.4` structure
+- 275 tests (was 273), 99%+ coverage on `llm.js`
+
+---
+
 ## [1.5.0] — 2026-04-12
 
 ### Added

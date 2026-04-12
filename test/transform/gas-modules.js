@@ -32,6 +32,7 @@ const knownFunctions = new Set([
   'setupAll',
   'setupLabels',
   'setupTrigger',
+  'smokeTest',
   'status',
   'testSetup',
   'validateConfig'

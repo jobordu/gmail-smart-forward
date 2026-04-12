@@ -22,16 +22,23 @@ var LlmClassifier = (function () {
   var PDF_TEXT_LIMIT = 3000;
 
   function _extractPdfTextViaDocumentApp(blob) {
+    var contentType = blob.getContentType();
+    if (contentType !== 'application/vnd.google-apps.document') {
+      Log.info('PDF tier 1 (DocumentApp): skipped — content type is ' + contentType + ', not a Google Doc');
+      return null;
+    }
     try {
       var tempFile = DriveApp.createFile(blob);
       tempFile.setTrashed(true);
       var doc = DocumentApp.openById(tempFile.getId());
       var text = doc.getBody().getText();
       if (text && text.trim().length > 0) {
+        Log.info('PDF tier 1 (DocumentApp): extracted ' + text.length + ' chars');
         return text.substring(0, PDF_TEXT_LIMIT);
       }
+      Log.info('PDF tier 1 (DocumentApp): returned empty text, trying tier 2');
     } catch (e) {
-      Log.info('DocumentApp extraction failed: ' + e.message);
+      Log.info('PDF tier 1 (DocumentApp): failed — ' + e.message);
     }
     return null;
   }
@@ -64,10 +71,12 @@ var LlmClassifier = (function () {
       }
       var combined = textParts.join(' ').replace(/\s+/g, ' ').trim();
       if (combined.length > 20) {
+        Log.info('PDF tier 2 (raw bytes): extracted ' + combined.length + ' chars from ' + textParts.length + ' text segments');
         return combined.substring(0, PDF_TEXT_LIMIT);
       }
+      Log.info('PDF tier 2 (raw bytes): extracted only ' + combined.length + ' chars, falling back to tier 3');
     } catch (e) {
-      Log.info('Raw bytes extraction failed: ' + e.message);
+      Log.info('PDF tier 2 (raw bytes): failed — ' + e.message);
     }
     return null;
   }
@@ -98,6 +107,7 @@ var LlmClassifier = (function () {
       parts.push('All attachments: ' + names.join(', '));
     }
 
+    Log.info('PDF tier 3 (metadata): using filename + size fallback for ' + name);
     return '[PDF metadata] ' + parts.join(', ');
   }
 
@@ -117,18 +127,14 @@ var LlmClassifier = (function () {
         var att = msgsAttachments[j];
         if (att.getName().toLowerCase().endsWith('.pdf')) {
           var blob = att.copyBlob();
-          var contentType = blob.getContentType();
-          if (contentType === 'application/pdf' || contentType === 'application/x-pdf') {
-            var text;
+          var text;
 
-            text = _extractPdfTextViaDocumentApp(blob);
-            if (text) return text;
+          text = _extractPdfTextViaDocumentApp(blob);
+          if (text) return text;
 
-            text = _extractPdfTextFromRawBytes(blob);
-            if (text) return text;
+          text = _extractPdfTextFromRawBytes(blob);
+          if (text) return text;
 
-            return _buildMetadataFallback(att, allAttachments);
-          }
           return _buildMetadataFallback(att, allAttachments);
         }
       }
