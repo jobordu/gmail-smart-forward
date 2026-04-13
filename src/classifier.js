@@ -6,9 +6,11 @@ var Classifier = (function () {
 
   function _senderEmail(message) {
     var from = message.getFrom();
-    // Extract email from "Name <email>" format
-    var match = from.match(/<([^>]+)>/);
-    return (match ? match[1] : from).toLowerCase().trim();
+    var matches = from.match(/<([^>]+)>/g);
+    if (matches && matches.length > 0) {
+      return matches[matches.length - 1].slice(1, -1).toLowerCase().trim();
+    }
+    return from.toLowerCase().trim();
   }
 
   function _senderDomain(message) {
@@ -27,7 +29,8 @@ var Classifier = (function () {
 
   function _attachmentNames(message) {
     return message.getAttachments().map(function (a) {
-      return a.getName().toLowerCase();
+      var name = a.getName();
+      return name ? name.toLowerCase() : '';
     });
   }
 
@@ -75,14 +78,14 @@ var Classifier = (function () {
     },
 
     // True if message has at least one PDF attachment
-    hasValidAttachment: function (message) {
-      var attachments = message.getAttachments();
-      for (var i = 0; i < attachments.length; i++) {
-        var name = attachments[i].getName().toLowerCase();
-        if (name.endsWith('.pdf')) return true;
-      }
-      return false;
-    },
+  hasValidAttachment: function (message) {
+    var attachments = message.getAttachments();
+    for (var i = 0; i < attachments.length; i++) {
+      var name = attachments[i].getName();
+      if (name && name.toLowerCase().endsWith('.pdf')) return true;
+    }
+    return false;
+  },
 
     // True if the thread is already marked as forwarded
     hasAlreadyBeenForwarded: function (thread) {
@@ -91,6 +94,7 @@ var Classifier = (function () {
 
     // True if a filename ends with one of the allowed extensions.
     _hasAllowedExtension: function (filename) {
+      if (!filename) return false;
       var extensions = Config.getAttachmentExtensions();
       var lower = filename.toLowerCase();
       for (var i = 0; i < extensions.length; i++) {
@@ -105,8 +109,10 @@ var Classifier = (function () {
       var messages = thread.getMessages();
       for (var i = 0; i < messages.length; i++) {
         var attachments = messages[i].getAttachments();
+        if (!attachments) continue;
         for (var j = 0; j < attachments.length; j++) {
-          if (Classifier._hasAllowedExtension(attachments[j].getName())) return true;
+          var name = attachments[j].getName();
+          if (name && Classifier._hasAllowedExtension(name)) return true;
         }
       }
       return false;

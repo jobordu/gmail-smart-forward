@@ -22,13 +22,14 @@ function processLiveEmails() {
   for (var i = 0; i < threads.length && processed < limit; i++) {
     var thread   = threads[i];
     var messages = thread.getMessages();
+    if (!messages || messages.length === 0) continue;
     var message  = messages[messages.length - 1];
 
     var reason = Classifier.classify(thread, message);
 
+    processed++;
     if (reason === null) {
       Forwarding.forwardToTarget(thread);
-      processed++;
     } else if (reason !== 'already-forwarded') {
       Labels.applyRejected(thread);
       var m = messages[messages.length - 1];

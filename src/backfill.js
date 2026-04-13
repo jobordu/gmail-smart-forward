@@ -50,16 +50,18 @@ function backfillSender(senderEmail) {
   Log.info('Sender backfill threads found', { sender: senderEmail, count: threads.length });
 
   var processed = 0;
-  for (var i = 0; i < threads.length; i++) {
+  var limit = Config.getMaxEmailsPerRun();
+  for (var i = 0; i < threads.length && processed < limit; i++) {
     var thread   = threads[i];
     var messages = thread.getMessages();
+    if (!messages || messages.length === 0) continue;
     var message  = messages[messages.length - 1];
 
     var reason = Classifier.classify(thread, message);
 
+    processed++;
     if (reason === null) {
       Forwarding.forwardToTarget(thread);
-      processed++;
     } else {
       Forwarding.markRejected(thread, reason);
     }
@@ -79,7 +81,13 @@ function _shuffle(arr) {
 
 function _runBackfill() {
   var afterDate = Config.getBackfillAfterDate();
-  var threads   = _shuffle(GmailSearch.forBackfill(afterDate));
+  var raw       = GmailSearch.forBackfill(afterDate);
+  if (!raw || raw.length === 0) {
+    Log.info('Backfill: no threads found');
+    Log.printSummary();
+    return;
+  }
+  var threads = _shuffle(raw);
   var limit     = Config.getMaxEmailsPerRun();
   var processed = 0;
 
@@ -88,13 +96,14 @@ function _runBackfill() {
   for (var i = 0; i < threads.length && processed < limit; i++) {
     var thread   = threads[i];
     var messages = thread.getMessages();
+    if (!messages || messages.length === 0) continue;
     var message  = messages[messages.length - 1];
 
     var reason = Classifier.classify(thread, message);
 
+    processed++;
     if (reason === null) {
       Forwarding.forwardToTarget(thread);
-      processed++;
     } else {
       // Label rejections so subsequent runs skip already-evaluated threads
       // (idempotency). Only threads not yet labeled forwarded or rejected

@@ -157,6 +157,10 @@ var LlmClassifier = (function () {
     var model     = Config.getLlmModel();
     var baseUrl   = Config.getLlmBaseUrl();
 
+    if (!apiKey) {
+      throw new Error('LLM_API_KEY is not configured.');
+    }
+
     var payload = {
       model: model,
       messages: [

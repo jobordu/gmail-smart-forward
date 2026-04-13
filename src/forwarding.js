@@ -29,6 +29,7 @@ var Forwarding = (function () {
     return thread.getMessages().filter(function (msg) {
       if (!Classifier.isSupplierAllowed(msg)) return false;
       var attachments = msg.getAttachments();
+      if (!attachments) return false;
       for (var i = 0; i < attachments.length; i++) {
         if (Classifier._hasAllowedExtension(attachments[i].getName())) return true;
       }
@@ -47,7 +48,7 @@ var Forwarding = (function () {
         _forward(message, thread);
       });
 
-      if (!Config.isDryRun()) {
+      if (!Config.isDryRun() && targets.length > 0) {
         Labels.applyForwarded(thread);
       }
     },
@@ -56,8 +57,10 @@ var Forwarding = (function () {
     markRejected: function (thread, reason) {
       Labels.applyRejected(thread);
       var messages = thread.getMessages();
-      var message  = messages[messages.length - 1];
-      Log.rejected(message, thread, reason);
+      if (messages && messages.length > 0) {
+        var message = messages[messages.length - 1];
+        Log.rejected(message, thread, reason);
+      }
     },
   };
 })();

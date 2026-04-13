@@ -15,24 +15,37 @@ var Config = (function () {
 
   function _get(key, defaultValue) {
     var val = _load()[key];
-    return (val !== undefined && val !== '') ? val : defaultValue;
+    if (val === undefined) return defaultValue;
+    val = val.trim();
+    return val !== '' ? val : defaultValue;
   }
 
   function _getList(key, defaultList) {
-    var raw = _get(key, null);
-    if (!raw) return defaultList || [];
-    return raw.split(',').map(function (s) { return s.trim().toLowerCase(); }).filter(Boolean);
+    var props = _load();
+    var raw = props[key];
+    if (raw === undefined) return defaultList || [];
+    raw = raw.trim();
+    if (raw === '') return [];
+    return raw.split(',').map(function (s) {
+      var trimmed = s.trim().toLowerCase();
+      var angleStart = trimmed.lastIndexOf('<');
+      if (angleStart === -1) return trimmed;
+      var angleEnd = trimmed.indexOf('>', angleStart);
+      if (angleEnd === -1) return trimmed;
+      return trimmed.substring(angleStart + 1, angleEnd);
+    }).filter(Boolean);
   }
 
   function _getBool(key, defaultValue) {
     var val = _get(key, null);
     if (val === null) return defaultValue;
-    return val === 'true';
+    return val.toLowerCase() === 'true';
   }
 
   function _getInt(key, defaultValue) {
     var val = parseInt(_get(key, defaultValue), 10);
-    return isNaN(val) ? defaultValue : val;
+    if (isNaN(val) || val < 0) return defaultValue;
+    return val;
   }
 
   return {
@@ -100,7 +113,7 @@ var Config = (function () {
         allowedDomains:      _getList('ALLOWED_DOMAINS', []),
         excludedSenders:     _getList('EXCLUDED_SENDERS', []),
         excludedDomains:     _getList('EXCLUDED_DOMAINS', []),
-        dryRun:              _getBool('DRY_RUN', true),
+        dryRun:              _getBool('DRY_RUN', DEFAULT_DRY_RUN),
         maxEmailsPerRun:     _getInt('MAX_EMAILS_PER_RUN', DEFAULT_MAX_EMAILS_PER_RUN),
         liveForwarding:      _getBool('ENABLE_LIVE_FORWARDING', false),
         backfillAfterDate:   _get('BACKFILL_AFTER_DATE', '(not set)'),

@@ -14,22 +14,36 @@ var Log = (function () {
 
   return {
     forwarded: function (message, thread) {
+      var date = message.getDate();
+      var dateStr;
+      try {
+        dateStr = date ? date.toISOString() : null;
+      } catch (_e) {
+        dateStr = null;
+      }
       return _entry('FORWARDED', {
         to:      Config.getForwardToEmail(),
         from:    message.getFrom(),
         subject: message.getSubject(),
-        date:    message.getDate().toISOString(),
+        date:    dateStr,
         threadId: thread.getId(),
         dryRun:  Config.isDryRun(),
       });
     },
 
     rejected: function (message, thread, reason) {
+      var date = message.getDate();
+      var dateStr;
+      try {
+        dateStr = date ? date.toISOString() : null;
+      } catch (_e) {
+        dateStr = null;
+      }
       return _entry('REJECTED', {
         reason:  reason,
         from:    message.getFrom(),
         subject: message.getSubject(),
-        date:    message.getDate().toISOString(),
+        date:    dateStr,
         threadId: thread.getId(),
       });
     },
@@ -66,7 +80,7 @@ var Log = (function () {
       }
     },
 
-    getEntries: function () { return _entries.slice(); },
+    getEntries: function () { return JSON.parse(JSON.stringify(_entries)); },
 
     __reset: function () { _entries = []; },
   };

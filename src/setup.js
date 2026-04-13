@@ -11,7 +11,7 @@ function bootstrapProperties() {
   // Filter out empty-string values so we don't overwrite existing properties with blanks
   var toSet = {};
   Object.keys(_ENV).forEach(function (k) {
-    if (_ENV[k] !== '') toSet[k] = _ENV[k];
+    if (_ENV[k] !== '' && _ENV[k].trim() !== '') toSet[k] = _ENV[k].trim();
   });
   PropertiesService.getScriptProperties().setProperties(toSet);
   Logger.log('Script Properties set: ' + JSON.stringify(Object.keys(toSet)));
@@ -35,6 +35,10 @@ function setupLabels() {
 // Safe to call multiple times — will not create duplicates.
 function setupTrigger() {
   var triggers = ScriptApp.getProjectTriggers();
+  if (!triggers) {
+    Logger.log('ScriptApp.getProjectTriggers() returned null. Skipping trigger setup.');
+    return;
+  }
   for (var i = 0; i < triggers.length; i++) {
     if (triggers[i].getHandlerFunction() === 'processLiveEmails') {
       Logger.log('Trigger already exists for processLiveEmails. Skipping.');
@@ -96,7 +100,7 @@ function validateConfig() {
 
   var extensions = Config.getAttachmentExtensions();
   var rawExtensions = PropertiesService.getScriptProperties().getProperty('ATTACHMENT_EXTENSIONS');
-  if (rawExtensions === '') {
+  if (rawExtensions !== null && rawExtensions.trim() === '') {
     errors.push('ATTACHMENT_EXTENSIONS is set but empty. No attachments will match — nothing will be forwarded.');
   } else {
     extensions.forEach(function (ext) {
@@ -177,8 +181,8 @@ function status() {
   Logger.log('State: ' + state);
   Logger.log('Trigger: ' + (hasTrigger ? 'Active (processLiveEmails every 15 min)' : 'Not installed'));
   Logger.log('Forward to: ' + (function () { try { return Config.getForwardToEmail(); } catch (_e) { return '(not set)'; } })());
-  Logger.log('Allowed senders: ' + Config.getAllowedSenders().join(', ') || '(none)');
-  Logger.log('Allowed domains: ' + Config.getAllowedDomains().join(', ') || '(none)');
+  Logger.log('Allowed senders: ' + (Config.getAllowedSenders().join(', ') || '(none)'));
+  Logger.log('Allowed domains: ' + (Config.getAllowedDomains().join(', ') || '(none)'));
   Logger.log('LLM classification: ' + (Config.isLlmEnabled() ? 'Enabled (' + Config.getLlmModel() + ')' : 'Disabled'));
   Logger.log('Labels:');
   Logger.log('  Candidate:  ' + labelCounts.Candidate + ' threads');

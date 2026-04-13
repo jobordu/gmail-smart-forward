@@ -77,6 +77,7 @@ var GmailSearch = (function () {
       var query = [
         'after:' + _formatDate(since),
         '-label:' + Config.getForwardedLabel(),
+        '-label:' + Config.getRejectedLabel(),
         '-in:sent',
         '-in:drafts',
       ].join(' ');

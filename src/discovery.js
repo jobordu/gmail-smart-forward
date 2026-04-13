@@ -43,12 +43,13 @@ function discoverSuppliers() {
       if (Classifier.hasValidAttachment(message)) entry.withPdf++;
 
       // Collect up to 3 sample subjects
-      if (entry.subjects.length < 3) entry.subjects.push(message.getSubject());
+      if (entry.subjects.length < 3) entry.subjects.push(message.getSubject() || '(no subject)');
 
       // Track which keywords matched in subject
       var subjectKw = Config.getSubjectKeywords();
+      var subject = message.getSubject() || '';
       subjectKw.forEach(function (kw) {
-        if (message.getSubject().toLowerCase().indexOf(kw) !== -1) {
+        if (subject.toLowerCase().indexOf(kw) !== -1) {
           entry.keywords[kw] = (entry.keywords[kw] || 0) + 1;
         }
       });
