@@ -1,6 +1,6 @@
 {
   "name": "gmail-smart-forward",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "Forward receipts/invoices from approved suppliers to a target email address",
   "scripts": {
     "build-env": "node scripts/build-env.js",

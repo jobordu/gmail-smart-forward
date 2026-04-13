@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.7.0] — 2026-04-13
+
+### Fixed
+- **Extensive robustness improvements** from 8 rounds of adversarial testing (480 tests total, 465 passing):
+  - Null safety: Added guards for null `getAttachments()`, `getLabels()`, `getDate()`, `getName()` across all modules
+  - Error handling: `setupTrigger()` now handles null `getProjectTriggers()` gracefully
+  - Date safety: `Log.forwarded()`/`Log.rejected()` catch invalid `Date.toISOString()` calls
+  - Attachment processing: Unicode filenames, empty names, and null returns handled safely
+  - Config parsing: Improved email extraction from complex headers with nested angle brackets
+  - LLM integration: Robust handling of API failures, malformed responses, and empty PDF text
+  - Backfill/live limits: Correctly count all processed threads (forwarded + rejected) toward `MAX_EMAILS_PER_RUN`
+  - Discovery: Handles null dates and aggregates stats for duplicate senders properly
+  - Caching: Labels cache recreates labels when external deletion occurs
+  - Large data: Threads with 1000+ messages, long queries, deep objects processed without crashes
+  - GAS-specific: All API null returns, quota failures, and invalid inputs gracefully degraded
+
+### Changed
+- 480 tests (was 465), 99%+ coverage across all modules
+- Logging catches and handles invalid Date serialization errors
+
+---
+
 ## [1.6.1] — 2026-04-12
 
 ### Fixed
