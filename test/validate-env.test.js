@@ -27,6 +27,7 @@ describe('validate-env', () => {
       DRY_RUN: 'true',
       ENABLE_LIVE_FORWARDING: 'false',
       ENABLE_LLM_CLASSIFICATION: 'false',
+      ALLOWED_SENDERS: 'supplier@example.com',
     });
     expect(result.exitCode).toBe(0);
     expect(result.output).toContain('Config looks good');
@@ -151,6 +152,7 @@ describe('validate-env', () => {
       ATTACHMENT_EXTENSIONS: 'pdf',
       DRY_RUN: 'true',
       ENABLE_LIVE_FORWARDING: 'false',
+      ALLOWED_SENDERS: 'supplier@example.com',
     });
     expect(result.exitCode).toBe(0);
     expect(result.output).toContain('Preview (DRY_RUN)');
