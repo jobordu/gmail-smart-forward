@@ -15,6 +15,8 @@
 
 A serverless Gmail forwarder with sender allowlist, keyword matching, and attachment filtering. Google-only — no external services, no server, no hosting cost. Works on a free personal Gmail account.
 
+Optionally, enable LLM classification (`ENABLE_LLM_CLASSIFICATION=true`) to use an OpenAI-compatible API. Works well with free-tier providers like [OpenRouter](https://openrouter.ai/) — no vendor lock-in.
+
 Configure it for any forwarding use case. The default ships with a multilingual invoice vocabulary across 7 languages (EN, FR, ES, PT, DE, ZH, JA) oriented toward a company tracking its outgoing spend — supplier invoices, subscription receipts, payslips. Your coding agent will ask about your use case and generate the right keywords in the right language during onboarding.
 
 ---
