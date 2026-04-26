@@ -11,7 +11,7 @@ function discoverSuppliers() {
   Log.info('Threads found for discovery', { count: threads.length });
 
   // Aggregate per-sender stats
-  var senderMap = {};
+  var senderMap = Object.create(null);
 
   threads.forEach(function (thread) {
     var messages = thread.getMessages();
