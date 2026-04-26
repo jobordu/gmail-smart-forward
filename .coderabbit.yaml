@@ -1,0 +1,59 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en-US"
+
+reviews:
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+
+  # Skip generated files, lock files, and non-code assets
+  path_filters:
+    - "!src/_env.js"
+    - "!package-lock.json"
+    - "!coverage/**"
+    - "!docs/**/*.png"
+    - "!docs/**/*.jpg"
+
+  path_instructions:
+    - path: "src/**/*.js"
+      instructions: |
+        This is a Google Apps Script project. The code runs in the Apps Script
+        runtime, NOT Node.js. Key differences to keep in mind:
+        - Global functions are entry points (no import/export).
+        - GAS built-ins like GmailApp, PropertiesService, UrlFetchApp, Logger
+          are available globally and should not be flagged as undefined.
+        - There are no native ES modules; all files share a single global scope.
+        - Focus on: security (email content handling, credential storage),
+          correctness of Gmail API usage, and clarity of classification logic.
+
+    - path: "test/**/*.js"
+      instructions: |
+        Tests use Jest with custom Google Apps Script mocks (see test/setup/).
+        Coverage threshold is 95%. Check for meaningful assertions, not just
+        coverage padding. Flag tests that mock too broadly and could mask real bugs.
+
+    - path: ".github/workflows/**"
+      instructions: |
+        Review for security best practices: pinned action versions, minimal
+        permissions, no secret leakage. This repo runs secret scanning
+        (Gitleaks, TruffleHog, detect-secrets) as part of CI.
+
+    - path: "scripts/**"
+      instructions: |
+        Build and validation scripts. Check for command injection risks
+        and correct error handling.
+
+  tools:
+    eslint:
+      enabled: true
+    shellcheck:
+      enabled: true
+
+chat:
+  auto_reply: true

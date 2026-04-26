@@ -4,6 +4,7 @@
 [![Version](https://img.shields.io/badge/version-1.6.1-brightgreen.svg)](CHANGELOG.md)
 [![Tests](https://img.shields.io/badge/tests-203%20passing-success.svg)](test/)
 [![Coverage](https://img.shields.io/badge/coverage-99%25-success.svg)](coverage/)
+[![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/jobordu/gmail-smart-forward?utm_source=oss&utm_medium=github&utm_campaign=jobordu%2Fgmail-smart-forward&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)](https://coderabbit.ai)
 
 > [!TIP]
 > **Get started — give this prompt to your coding agent:**
