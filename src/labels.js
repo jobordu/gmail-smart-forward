@@ -48,6 +48,7 @@ var Labels = (function () {
 
     applyRejected: function (thread) {
       thread.addLabel(Labels.getRejected());
+      thread.removeLabel(Labels.getCandidate());
     },
 
     applyDiscovered: function (thread) {

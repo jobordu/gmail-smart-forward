@@ -104,4 +104,22 @@ describe('Labels', () => {
     const label2 = Labels.getCandidate();
     expect(label1).toBe(label2);
   });
+
+  test('BUG: applyRejected does not remove candidate label, unlike applyForwarded — rejected threads stay in candidate search results', () => {
+    // applyForwarded calls both addLabel(forwarded) and removeLabel(candidate).
+    // applyRejected only calls addLabel(rejected) — it does NOT remove candidate.
+    // This means rejected threads retain the candidate label and will appear in
+    // any search or filter targeting candidate-labeled threads, causing them to
+    // be re-evaluated on subsequent runs (until classify returns 'already-forwarded'
+    // or 'excluded-sender' again, wasting compute).
+    const candidateLabel = Labels.getCandidate();
+    const thread = createMockThread({ labels: [candidateLabel] });
+
+    Labels.applyRejected(thread);
+
+    // After rejection, thread should NOT still have the candidate label
+    const threadLabels = thread.getLabels();
+    const hasCandidateStill = threadLabels.some(l => l.getName() === candidateLabel.getName());
+    expect(hasCandidateStill).toBe(false);
+  });
 });

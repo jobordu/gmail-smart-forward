@@ -139,4 +139,22 @@ describe('Log', () => {
     const logCalls = Logger.log.mock.calls.map(c => c[0]);
     expect(logCalls).toContain('Forwarded: 1');
   });
+
+  test('BUG: _entry allows caller data to overwrite type and ts via Object.assign ordering', () => {
+    // Log._entry does Object.assign({ type, ts }, data) — data fields come second
+    // so a caller passing { type: 'SPOOFED' } overwrites the intended type.
+    // This could corrupt log entries and break printSummary aggregation.
+    const entry = Log.info('test message', { type: 'SPOOFED', ts: '1999-01-01T00:00:00Z' });
+
+    // If Object.assign ordering is correct (base wins), type should be 'INFO'.
+    // If this test fails, it means caller data can corrupt log entry metadata.
+    expect(entry.type).toBe('INFO');
+    expect(entry.ts).not.toBe('1999-01-01T00:00:00Z');
+
+    // Also verify printSummary doesn't count a SPOOFED entry as INFO
+    Log.printSummary();
+    const logCalls = Logger.log.mock.calls.map(c => c[0]);
+    // If type was overwritten to 'SPOOFED', printSummary won't count it correctly
+    expect(logCalls.some(l => l && l.includes('Forwarded: 0'))).toBe(true);
+  });
 });

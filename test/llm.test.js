@@ -894,5 +894,32 @@ describe('LlmClassifier', () => {
       const pdfSection = userContent.split('--- PDF attachment content ---')[1];
       expect(pdfSection.length).toBeLessThanOrEqual(3001);
     });
+
+    test('BUG: trailing slash in LLM_BASE_URL produces double-slash in API endpoint URL', () => {
+      // _callApi concatenates baseUrl + '/chat/completions' without stripping
+      // trailing slashes. If a user configures LLM_BASE_URL with a trailing slash
+      // (e.g. 'https://openrouter.ai/api/v1/'), the resulting URL is
+      // 'https://openrouter.ai/api/v1//chat/completions' (double slash).
+      // Some API providers reject double-slash URLs with 404 or routing errors.
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      mockPropsStore.LLM_BASE_URL = 'https://openrouter.ai/api/v1/';
+      Config.__reset();
+
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.9,\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      const msg = createMockMessage({ subject: 'Test', body: 'Test', attachments: [] });
+      const thread = createMockThread({ messages: [msg] });
+
+      LlmClassifier.classifyInvoice(msg, thread);
+
+      const fetchCall = UrlFetchApp.fetch.mock.calls[0];
+      const url = fetchCall[0];
+      // URL should NOT contain double slashes (except after protocol)
+      const urlWithoutProtocol = url.replace('https://', '');
+      expect(urlWithoutProtocol).not.toContain('//');
+    });
   });
 });

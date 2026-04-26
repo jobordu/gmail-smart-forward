@@ -55,6 +55,10 @@ function setupTrigger() {
 // Remove all triggers for processLiveEmails (kill switch).
 function removeTrigger() {
   var triggers = ScriptApp.getProjectTriggers();
+  if (!triggers) {
+    Logger.log('No triggers found (getProjectTriggers returned null).');
+    return;
+  }
   var removed = 0;
   for (var i = 0; i < triggers.length; i++) {
     if (triggers[i].getHandlerFunction() === 'processLiveEmails') {

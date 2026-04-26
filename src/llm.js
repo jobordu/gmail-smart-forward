@@ -180,7 +180,8 @@ var LlmClassifier = (function () {
       muteHttpExceptions: true
     };
 
-    var response = UrlFetchApp.fetch(baseUrl + '/chat/completions', options);
+    var endpoint = baseUrl.replace(/\/+$/, '') + '/chat/completions';
+    var response = UrlFetchApp.fetch(endpoint, options);
     var code = response.getResponseCode();
     if (code !== 200) {
       throw new Error('LLM API returned ' + code + ': ' + response.getContentText().substring(0, 200));

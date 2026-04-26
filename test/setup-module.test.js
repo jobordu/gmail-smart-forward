@@ -93,6 +93,21 @@ describe('setup', () => {
       expect(mockScriptApp.deleteTrigger).toHaveBeenCalledWith(trigger1);
       expect(mockScriptApp.deleteTrigger).not.toHaveBeenCalledWith(trigger2);
     });
+
+    test('BUG: removeTrigger crashes when getProjectTriggers returns null (unlike setupTrigger which guards against it)', () => {
+      // setupTrigger has an explicit null guard: if (!triggers) { ... return; }
+      // removeTrigger does NOT have this guard. If ScriptApp.getProjectTriggers()
+      // returns null (which can happen in some GAS environments), removeTrigger
+      // will crash with "Cannot read properties of null (reading 'length')".
+      const original = global.ScriptApp;
+      global.ScriptApp = { ...original, getProjectTriggers: jest.fn(() => null) };
+
+      try {
+        expect(() => removeTrigger()).not.toThrow();
+      } finally {
+        global.ScriptApp = original;
+      }
+    });
   });
 
   describe('validateConfig', () => {

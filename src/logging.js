@@ -6,7 +6,7 @@ var Log = (function () {
   var _entries = [];
 
   function _entry(type, data) {
-    var entry = Object.assign({ type: type, ts: new Date().toISOString() }, data);
+    var entry = Object.assign({}, data, { type: type, ts: new Date().toISOString() });
     _entries.push(entry);
     Logger.log(JSON.stringify(entry));
     return entry;
