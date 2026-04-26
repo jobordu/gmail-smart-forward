@@ -183,7 +183,7 @@ describe('backfill', () => {
 
       expect(mockGmailApp.search).toHaveBeenCalled();
       const query = mockGmailApp.search.mock.calls[0][0];
-      expect(query).toContain('from:invoice+statements+acct_1Rh0IhRp8MKof9Wn@stripe.com');
+      expect(query).toContain('from:"invoice+statements+acct_1Rh0IhRp8MKof9Wn@stripe.com"');
       expect(query).toContain('filename:pdf');
     });
 

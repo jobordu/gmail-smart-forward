@@ -159,6 +159,10 @@ var LlmClassifier = (function () {
     var model     = Config.getLlmModel();
     var baseUrl   = Config.getLlmBaseUrl();
 
+    if (baseUrl && !/^https:\/\//i.test(baseUrl)) {
+      throw new Error('LLM_BASE_URL must use HTTPS. Got: ' + baseUrl.substring(0, 30));
+    }
+
     if (!apiKey) {
       throw new Error('LLM_API_KEY is not configured.');
     }

@@ -32,7 +32,7 @@ function backfillSender(senderEmail) {
   senderEmail = senderEmail.trim();
 
   var query = [
-    'from:' + senderEmail,
+    'from:"' + senderEmail.replace(/"/g, '') + '"',
     'filename:pdf',
     '-label:' + Config.getForwardedLabel(),
     '-label:' + Config.getRejectedLabel(),
