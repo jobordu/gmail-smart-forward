@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "env": {
+    "es2020": true
+  },
+  "globals": {
+    "Config": "readonly",
+    "Classifier": "readonly",
+    "Labels": "readonly",
+    "Log": "readonly",
+    "GmailSearch": "readonly",
+    "LlmClassifier": "readonly",
+    "Forwarding": "readonly",
+    "_ENV": "readonly",
+    "GmailApp": "readonly",
+    "PropertiesService": "readonly",
+    "Logger": "readonly",
+    "UrlFetchApp": "readonly",
+    "Utilities": "readonly",
+    "ScriptApp": "readonly",
+    "DocumentApp": "readonly",
+    "DriveApp": "readonly",
+    "DEFAULT_SUBJECT_KEYWORDS": "readonly",
+    "DEFAULT_ATTACHMENT_KEYWORDS": "readonly",
+    "DEFAULT_ATTACHMENT_EXTENSIONS": "readonly",
+    "DEFAULT_EXCLUDED_KEYWORDS": "readonly",
+    "DEFAULT_DISCOVERY_DAYS": "readonly",
+    "DEFAULT_MAX_EMAILS_PER_RUN": "readonly",
+    "DEFAULT_DRY_RUN": "readonly",
+    "LABEL_NAMES": "readonly"
+  },
+  "rules": {
+    "no-unused-vars": "off",
+    "no-redeclare": "off",
+    "no-undef": "off",
+    "no-empty": "off",
+    "no-constant-condition": "off",
+    "eqeqeq": "warn",
+    "no-debugger": "error",
+    "no-duplicate-case": "error",
+    "no-self-compare": "error",
+    "no-template-curly-in-string": "warn",
+    "no-unsafe-negation": "error",
+    "no-loss-of-precision": "error",
+    "no-prototype-builtins": "warn",
+    "no-useless-catch": "warn",
+    "no-case-declarations": "warn",
+    "no-fallthrough": "warn",
+    "no-async-promise-executor": "error",
+    "no-control-regex": "warn",
+    "no-shadow-restricted-names": "error",
+    "no-delete-var": "error",
+    "no-var": "off"
+  },
+  "ignorePatterns": [
+    "node_modules",
+    "coverage",
+    "src/_env.js"
+  ]
+}

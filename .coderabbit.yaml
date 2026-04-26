@@ -54,6 +54,9 @@ reviews:
       enabled: true
     shellcheck:
       enabled: true
+    oxc:
+      enabled: true
+      config_file: "oxlintrc.json"
 
 chat:
   auto_reply: true
