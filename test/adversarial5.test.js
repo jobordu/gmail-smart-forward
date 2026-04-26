@@ -23,24 +23,24 @@ describe('Adversarial Round 5 — New bugs', () => {
     });
   });
 
-  describe('BUG 2: _attachmentNames crashes when getAttachments returns null', () => {
-    test('isForwardableReceipt crashes when getAttachments returns null', () => {
+  describe('BUG 2: _attachmentNames handles null getAttachments gracefully', () => {
+    test('isForwardableReceipt returns false when getAttachments returns null', () => {
       const msg = createMockMessage({ subject: 'Hello' });
       msg.getAttachments = jest.fn(() => null);
-      expect(() => Classifier.isForwardableReceipt(msg)).not.toThrow();
+      expect(Classifier.isForwardableReceipt(msg)).toBe(false);
     });
   });
 
-  describe('BUG 3: hasValidAttachment crashes when getAttachments returns null', () => {
-    test('hasValidAttachment throws when getAttachments returns null', () => {
+  describe('BUG 3: hasValidAttachment handles null getAttachments gracefully', () => {
+    test('hasValidAttachment returns false when getAttachments returns null', () => {
       const msg = createMockMessage();
       msg.getAttachments = jest.fn(() => null);
-      expect(() => Classifier.hasValidAttachment(msg)).not.toThrow();
+      expect(Classifier.hasValidAttachment(msg)).toBe(false);
     });
   });
 
-  describe('BUG 4: discovery date comparison with null getDate', () => {
-    test('discoverSuppliers crashes when second message from same sender has null getDate', () => {
+  describe('BUG 4: discovery handles null getDate gracefully', () => {
+    test('discoverSuppliers does not throw when second message has null getDate', () => {
       const msg1 = createMockMessage({
         from: '<supplier@a.com>',
         subject: 'Invoice 1',
@@ -209,11 +209,11 @@ describe('Adversarial Round 5 — New bugs', () => {
     });
   });
 
-  describe('BUG 13: _senderEmail crashes on undefined getFrom', () => {
-    test('getSenderEmail throws when getFrom returns undefined', () => {
+  describe('BUG 13: _senderEmail handles undefined getFrom gracefully', () => {
+    test('getSenderEmail returns empty string when getFrom returns undefined', () => {
       const msg = createMockMessage();
       msg.getFrom = jest.fn(() => undefined);
-      expect(() => Classifier.getSenderEmail(msg)).not.toThrow();
+      expect(Classifier.getSenderEmail(msg)).toBe('');
     });
   });
 

@@ -127,8 +127,8 @@ var LlmClassifier = (function () {
       if (!msgsAttachments) continue;
       for (var j = 0; j < msgsAttachments.length; j++) {
         var att = msgsAttachments[j];
-          var attName = att.getName();
-          if (attName && attName.toLowerCase().endsWith('.pdf')) {
+        var attName = att.getName();
+        if (attName && attName.toLowerCase().endsWith('.pdf')) {
           var blob = att.copyBlob();
           var text;
 

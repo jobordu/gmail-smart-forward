@@ -48,14 +48,9 @@ describe('Adversarial Round 13 — Iteration 3 security hardening', () => {
       // because the angle bracket was broken by the comma split
       // This documents that malformed entries degrade gracefully — they
       // don't accidentally match anything they shouldn't
-      for (const entry of senders) {
-        // No entry should be exactly a valid-looking email without artifacts
-        if (entry === 'billing@vendor.com' || entry === 'attacker@evil.com') {
-          // If either clean address appears, the parser extracted it correctly
-          // from a broken bracket — this is acceptable ONLY if both don't appear
-          expect(senders).not.toContain('attacker@evil.com');
-        }
-      }
+      expect(senders).not.toContain('billing@vendor.com');
+      expect(senders).not.toContain('attacker@evil.com');
+      expect(senders).toHaveLength(2); // two mangled fragments, neither clean
     });
 
     test('properly formatted entries still work after a malformed one', () => {
@@ -92,18 +87,19 @@ describe('Adversarial Round 13 — Iteration 3 security hardening', () => {
 
       const query = mockGmailApp.search.mock.calls[0][0];
 
-      // The keyword is wrapped in quotes by forBackfill: '"keyword"'
-      // If the keyword contains quotes, the resulting query becomes:
-      // '"invoice" OR in:sent OR "hack"' which DOES break out.
-      // This test documents whether the code is vulnerable.
-      // FINDING: The code does NOT sanitize keywords before quoting.
-      // The raw query will contain the injected operators.
-      // However, keywords come from SUBJECT_KEYWORDS config (admin-controlled),
-      // not from email content, so this is a config-trust issue, not an
-      // external injection. Document the invariant:
       expect(query).toContain('subject:(');
 
-      // Verify the query still has the structural elements intact
+      // Extract the subject:(...) group to document the injection surface
+      const subjectMatch = query.match(/subject:\(([^)]*)\)/);
+      expect(subjectMatch).not.toBeNull();
+      const subjectGroup = subjectMatch[1];
+      // KNOWN LIMITATION: keywords come from admin config (SUBJECT_KEYWORDS),
+      // not user input. Malicious keywords CAN inject operators into the
+      // subject group. This is a config-trust boundary, not an external injection.
+      // Document that the injected content is confined to the subject:() group:
+      expect(subjectGroup).toContain('in:sent'); // injection lands here
+
+      // The structural negation operators outside subject:() are unaffected
       expect(query).toContain('-label:');
       expect(query).toContain('-in:sent');
       expect(query).toContain('-in:drafts');
@@ -118,8 +114,11 @@ describe('Adversarial Round 13 — Iteration 3 security hardening', () => {
 
       const query = mockGmailApp.search.mock.calls[0][0];
 
+      // KNOWN LIMITATION: same config-trust boundary as above.
+      // Parentheses in admin-controlled keywords can inject into subject group.
+      // Verify structural negation operators outside subject:() are unaffected.
+
       // The structural negation operators must still be present
-      // regardless of what the keyword contains
       expect(query).toContain('-in:sent');
       expect(query).toContain('-in:drafts');
       expect(query).toContain('-label:');

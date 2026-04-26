@@ -8,12 +8,14 @@ var Log = (function () {
   function _entry(type, data) {
     var entry = Object.assign({}, data, { type: type, ts: new Date().toISOString() });
     var json;
+    var safe = entry;
     try {
       json = JSON.stringify(entry);
     } catch (_e) {
-      json = JSON.stringify({ type: type, ts: entry.ts, error: 'circular reference in data' });
+      safe = { type: type, ts: entry.ts, error: 'circular reference in data' };
+      json = JSON.stringify(safe);
     }
-    _entries.push(entry);
+    _entries.push(safe);
     Logger.log(json);
     return entry;
   }

@@ -169,7 +169,7 @@ describe('Adversarial Round 12 — Iteration 2 security hardening', () => {
       const result = Classifier._hasAllowedExtension(maliciousName);
       // JavaScript endsWith works on full string including \0, so .pdf at end matches
       // This is the CURRENT behavior - document it so any change is intentional
-      expect(typeof result).toBe('boolean');
+      expect(result).toBe(true);
     });
 
     test('path traversal in filename is handled without error', () => {

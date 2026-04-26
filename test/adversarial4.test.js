@@ -3,32 +3,32 @@ describe('Adversarial Round 4 — New bugs', () => {
     resetTestState();
   });
 
-  describe('BUG 1: _senderEmail crashes on null getFrom', () => {
-    test('getSenderEmail throws TypeError when getFrom() returns null', () => {
+  describe('BUG 1: _senderEmail handles null getFrom gracefully', () => {
+    test('getSenderEmail returns empty string when getFrom() returns null', () => {
       const msg = createMockMessage();
       msg.getFrom = jest.fn(() => null);
-      expect(() => Classifier.getSenderEmail(msg)).not.toThrow();
+      expect(Classifier.getSenderEmail(msg)).toBe('');
     });
   });
 
-  describe('BUG 2: _containsKeyword crashes on null text in isForwardableReceipt', () => {
-    test('isForwardableReceipt throws when getSubject() returns null', () => {
+  describe('BUG 2: _containsKeyword handles null text in isForwardableReceipt', () => {
+    test('isForwardableReceipt returns false when getSubject() returns null', () => {
       const msg = createMockMessage();
       msg.getSubject = jest.fn(() => null);
-      expect(() => Classifier.isForwardableReceipt(msg)).not.toThrow();
+      expect(Classifier.isForwardableReceipt(msg)).toBe(false);
     });
   });
 
-  describe('BUG 3: _containsKeyword crashes on null text in isExcludedMessage (body)', () => {
-    test('isExcludedMessage throws when getPlainBody() returns null', () => {
+  describe('BUG 3: _containsKeyword handles null text in isExcludedMessage (body)', () => {
+    test('isExcludedMessage returns false when getPlainBody() returns null', () => {
       const msg = createMockMessage({ subject: 'normal subject' });
       msg.getPlainBody = jest.fn(() => null);
-      expect(() => Classifier.isExcludedMessage(msg)).not.toThrow();
+      expect(Classifier.isExcludedMessage(msg)).toBe(false);
     });
   });
 
-  describe('BUG 4: discovery crash on null getFrom', () => {
-    test('discoverSuppliers crashes when message.getFrom() returns null', () => {
+  describe('BUG 4: discovery handles null getFrom gracefully', () => {
+    test('discoverSuppliers does not throw when message.getFrom() returns null', () => {
       const msg = createMockMessage({
         subject: 'Invoice',
       });
@@ -133,11 +133,11 @@ describe('Adversarial Round 4 — New bugs', () => {
     });
   });
 
-  describe('BUG 12: Labels.isForwarded crashes when thread.getLabels() returns null', () => {
-    test('isForwarded throws when thread.getLabels() returns null', () => {
+  describe('BUG 12: Labels.isForwarded handles null getLabels() gracefully', () => {
+    test('isForwarded returns false when thread.getLabels() returns null', () => {
       const thread = createMockThread();
       thread.getLabels = jest.fn(() => null);
-      expect(() => Labels.isForwarded(thread)).not.toThrow();
+      expect(Labels.isForwarded(thread)).toBe(false);
     });
   });
 

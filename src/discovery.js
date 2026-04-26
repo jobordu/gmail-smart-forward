@@ -36,8 +36,8 @@ function discoverSuppliers() {
       entry.totalEmails++;
 
       var msgDate = message.getDate();
-      if (msgDate && entry.firstSeen && msgDate < entry.firstSeen) entry.firstSeen = msgDate;
-      if (msgDate && entry.lastSeen && msgDate > entry.lastSeen)  entry.lastSeen  = msgDate;
+      if (msgDate && (!entry.firstSeen || msgDate < entry.firstSeen)) entry.firstSeen = msgDate;
+      if (msgDate && (!entry.lastSeen  || msgDate > entry.lastSeen))  entry.lastSeen  = msgDate;
 
       // PDF attachment count
       if (Classifier.hasValidAttachment(message)) entry.withPdf++;

@@ -31,8 +31,9 @@ describe('Adversarial Round 14 — Iteration 4 security hardening', () => {
       // MITIGATION: senderEmail is now quoted in the from: clause.
       // The query should contain from:"..." preventing injection.
       expect(query).toContain('from:"anything OR in:sent OR from:ceo@company.com"');
-      // The injected operators should NOT appear as separate clauses
-      expect(query.indexOf('OR in:sent')).toBeGreaterThan(query.indexOf('from:"'));
+      // Strip the quoted from:"..." clause and verify injected operators don't appear outside it
+      const sanitizedQuery = query.replace(/from:"[^"]*"/, '');
+      expect(sanitizedQuery).not.toContain('OR in:sent');
     });
 
     test('senderEmail with curly braces / special chars passes through unescaped', () => {

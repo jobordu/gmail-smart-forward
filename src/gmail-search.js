@@ -20,7 +20,7 @@ var GmailSearch = (function () {
   }
 
   // Sanitize a label name for use in Gmail search queries.
-  // Wraps in quotes and escapes internal quotes to prevent query injection.
+  // Wraps in quotes after removing internal quotes to prevent query injection.
   function _safeLabel(name) {
     return '"' + name.replace(/"/g, '') + '"';
   }

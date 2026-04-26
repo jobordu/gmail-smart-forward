@@ -3,31 +3,31 @@ describe('Adversarial Round 3 — New bugs', () => {
     resetTestState();
   });
 
-  describe('BUG 1: _containsKeyword crashes on null text', () => {
-    test('isExcludedMessage crashes when getSubject() returns null', () => {
+  describe('BUG 1: _containsKeyword handles null text gracefully', () => {
+    test('isExcludedMessage does not throw when getSubject() returns null', () => {
       const msg = createMockMessage({ subject: 'Hello' });
       msg.getSubject = jest.fn(() => null);
-      expect(() => Classifier.isExcludedMessage(msg)).not.toThrow();
+      expect(Classifier.isExcludedMessage(msg)).toBe(false);
     });
 
-    test('isForwardableReceipt crashes when getSubject() returns null', () => {
+    test('isForwardableReceipt does not throw when getSubject() returns null', () => {
       const msg = createMockMessage({ subject: 'Hello' });
       msg.getSubject = jest.fn(() => null);
-      expect(() => Classifier.isForwardableReceipt(msg)).not.toThrow();
+      expect(Classifier.isForwardableReceipt(msg)).toBe(false);
     });
 
-    test('isExcludedMessage crashes when getPlainBody() returns null', () => {
+    test('isExcludedMessage does not throw when getPlainBody() returns null', () => {
       const msg = createMockMessage({ body: 'body' });
       msg.getPlainBody = jest.fn(() => null);
-      expect(() => Classifier.isExcludedMessage(msg)).not.toThrow();
+      expect(Classifier.isExcludedMessage(msg)).toBe(false);
     });
   });
 
-  describe('BUG 2: _senderEmail crashes on null from', () => {
-    test('getSenderEmail crashes when getFrom() returns null', () => {
+  describe('BUG 2: _senderEmail handles null from gracefully', () => {
+    test('getSenderEmail returns empty string when getFrom() returns null', () => {
       const msg = createMockMessage();
       msg.getFrom = jest.fn(() => null);
-      expect(() => Classifier.getSenderEmail(msg)).not.toThrow();
+      expect(Classifier.getSenderEmail(msg)).toBe('');
     });
   });
 
