@@ -81,8 +81,8 @@ function validateConfig() {
     if (!/@/.test(email)) {
       errors.push('FORWARD_TO_EMAIL "' + email + '" does not look like a valid email address.');
     }
-    if (/[,;]/.test(email)) {
-      errors.push('FORWARD_TO_EMAIL must be a single email address. Multiple recipients are not allowed for security reasons.');
+    if (/[,;\r\n\x00\t]/.test(email)) {
+      errors.push('FORWARD_TO_EMAIL must be a single email address. Multiple recipients or control characters are not allowed.');
     }
   }
 

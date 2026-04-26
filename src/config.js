@@ -55,7 +55,7 @@ var Config = (function () {
     getForwardToEmail: function () {
       var email = _get('FORWARD_TO_EMAIL', null);
       if (!email) throw new Error('Script Property FORWARD_TO_EMAIL is required.');
-      if (/[,;]/.test(email)) throw new Error('FORWARD_TO_EMAIL must be a single email address. Multiple recipients are not allowed.');
+      if (/[,;\r\n\x00\t]/.test(email)) throw new Error('FORWARD_TO_EMAIL must be a single email address. Multiple recipients or control characters are not allowed.');
       return email;
     },
 
