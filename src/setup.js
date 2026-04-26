@@ -128,6 +128,11 @@ function validateConfig() {
     if (threshold < 0 || threshold > 1) {
       errors.push('LLM_CONFIDENCE_THRESHOLD must be between 0 and 1, got ' + threshold + '.');
     }
+    // Warn if the raw value was garbage and silently replaced with default
+    var rawThreshold = PropertiesService.getScriptProperties().getProperties()['LLM_CONFIDENCE_THRESHOLD'];
+    if (rawThreshold !== undefined && rawThreshold.trim() !== '' && isNaN(parseFloat(rawThreshold))) {
+      warnings.push('LLM_CONFIDENCE_THRESHOLD value "' + rawThreshold + '" is not a number — using default 0.7.');
+    }
   }
 
   var result = { errors: errors, warnings: warnings };
@@ -162,10 +167,12 @@ function status() {
 
   var triggers = ScriptApp.getProjectTriggers();
   var hasTrigger = false;
-  for (var i = 0; i < triggers.length; i++) {
-    if (triggers[i].getHandlerFunction() === 'processLiveEmails') {
-      hasTrigger = true;
-      break;
+  if (triggers) {
+    for (var i = 0; i < triggers.length; i++) {
+      if (triggers[i].getHandlerFunction() === 'processLiveEmails') {
+        hasTrigger = true;
+        break;
+      }
     }
   }
 
@@ -251,6 +258,10 @@ function clearAllLabels() {
 
   labels.forEach(function (entry) {
     var threads = entry.label.getThreads();
+    if (!threads) {
+      Logger.log('Clearing "' + entry.name + '": no threads (getThreads returned null).');
+      return;
+    }
     Logger.log('Clearing "' + entry.name + '" from ' + threads.length + ' threads...');
     threads.forEach(function (thread) {
       thread.removeLabel(entry.label);

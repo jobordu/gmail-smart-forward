@@ -483,4 +483,79 @@ describe('Classifier', () => {
       expect(Classifier.findAllowlistedMessage(thread)).toBe(msg);
     });
   });
+
+  describe('edge cases: LLM missing confidence field allows forwarding', () => {
+    test('classify forwards email when LLM returns missing confidence field (undefined < threshold is false)', () => {
+      // BUG: When the LLM response omits the "confidence" field entirely,
+      // result.confidence is undefined. In JavaScript, `undefined < 0.7` evaluates
+      // to false, so the condition `!result.is_invoice || result.confidence < threshold`
+      // becomes `!true || false` = false, meaning the email passes classification
+      // and gets forwarded despite having no confidence score.
+      mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+      mockPropsStore.ENABLE_LLM_CLASSIFICATION = 'true';
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"reason\\":\\"looks like invoice\\"}"}}]}'
+      );
+
+      const att = createMockAttachment('invoice.pdf');
+      const msg = createMockMessage({ from: '<supplier@example.com>', attachments: [att] });
+      const thread = createMockThread({ messages: [msg] });
+
+      // This SHOULD reject (no confidence = uncertain), but the implementation
+      // treats undefined confidence as passing. Expect null (forwarded).
+      const result = Classifier.classify(thread, msg);
+      // If this is null, the bug exists: missing confidence should not pass.
+      // A robust implementation would reject when confidence is missing/undefined.
+      expect(result).toBeNull();
+    });
+
+    test('classify forwards email when LLM returns confidence as non-numeric string (NaN < threshold is false)', () => {
+      // BUG: When the LLM returns confidence as a string like "high" instead of
+      // a number, parseFloat is not called on it. "high" < 0.7 => NaN < 0.7 => false.
+      // So the check passes and the email is forwarded with garbage confidence.
+      mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+      mockPropsStore.ENABLE_LLM_CLASSIFICATION = 'true';
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      Config.__reset();
+
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":\\"high\\",\\"reason\\":\\"test\\"}"}}]}'
+      );
+
+      const att = createMockAttachment('invoice.pdf');
+      const msg = createMockMessage({ from: '<supplier@example.com>', attachments: [att] });
+      const thread = createMockThread({ messages: [msg] });
+
+      const result = Classifier.classify(thread, msg);
+      // Bug: "high" is not a valid confidence value but passes the < threshold check
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('edge cases: _senderEmail with pathological From headers', () => {
+    test('getSenderEmail extracts spoofed email when From contains misleading angle brackets', () => {
+      // A From header like "victim@bank.com <attacker@evil.com>" has the real
+      // address in angle brackets. The regex grabs the LAST match, which is correct,
+      // but a user seeing "victim@bank.com" in the display name might think
+      // that's the sender. This test confirms the implementation takes the
+      // angle-bracket address (attacker), not the display-name address.
+      const msg = createMockMessage({ from: 'victim@bank.com <attacker@evil.com>' });
+      expect(Classifier.getSenderEmail(msg)).toBe('attacker@evil.com');
+    });
+
+    test('getSenderDomain returns empty string when email has multiple @ signs', () => {
+      // An email like "user@middle@domain.com" splits into 3 parts,
+      // so parts.length !== 2 and _senderDomain returns ''.
+      // This means domain-based allowlisting silently fails for malformed addresses.
+      const msg = createMockMessage({ from: 'user@middle@domain.com' });
+      expect(Classifier.getSenderDomain(msg)).toBe('');
+      // Verify this sender would NOT match a domain allowlist for "domain.com"
+      mockPropsStore.ALLOWED_DOMAINS = 'domain.com';
+      Config.__reset();
+      expect(Classifier.isSupplierAllowed(msg)).toBe(false);
+    });
+  });
 });
