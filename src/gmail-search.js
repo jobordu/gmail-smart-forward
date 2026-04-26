@@ -19,6 +19,12 @@ var GmailSearch = (function () {
     return d;
   }
 
+  // Sanitize a label name for use in Gmail search queries.
+  // Wraps in quotes and escapes internal quotes to prevent query injection.
+  function _safeLabel(name) {
+    return '"' + name.replace(/"/g, '') + '"';
+  }
+
   // Paginate GmailApp.search to collect up to maxResults threads
   function _search(query, maxResults) {
     var results = [];
@@ -55,8 +61,8 @@ var GmailSearch = (function () {
     // Candidate search: threads not yet labeled forwarded
     forBackfill: function (afterDateStr) {
       var parts = [
-        '-label:' + Config.getForwardedLabel(),
-        '-label:' + Config.getRejectedLabel(),
+        '-label:' + _safeLabel(Config.getForwardedLabel()),
+        '-label:' + _safeLabel(Config.getRejectedLabel()),
         '-in:sent',
         '-in:drafts',
       ];
@@ -87,8 +93,8 @@ var GmailSearch = (function () {
       since.setMinutes(since.getMinutes() - minutesBack);
       var query = [
         'after:' + _formatDate(since),
-        '-label:' + Config.getForwardedLabel(),
-        '-label:' + Config.getRejectedLabel(),
+        '-label:' + _safeLabel(Config.getForwardedLabel()),
+        '-label:' + _safeLabel(Config.getRejectedLabel()),
         '-in:sent',
         '-in:drafts',
       ].join(' ');

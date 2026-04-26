@@ -269,7 +269,7 @@ describe('Adversarial Round 2 — New bugs', () => {
       GmailSearch.forLive(20);
 
       const query = mockGmailApp.search.mock.calls[0][0];
-      expect(query).toContain('-label:gmail-smart-forward/rejected');
+      expect(query).toContain('-label:"gmail-smart-forward/rejected"');
     });
   });
 

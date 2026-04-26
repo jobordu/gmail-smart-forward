@@ -73,14 +73,17 @@ function validateConfig() {
   var errors = [];
   var warnings = [];
 
-  var email = null;
-  try {
-    email = Config.getForwardToEmail();
-    if (email && !/@/.test(email)) {
+  var rawEmail = PropertiesService.getScriptProperties().getProperties()['FORWARD_TO_EMAIL'];
+  var email = rawEmail ? rawEmail.trim() : null;
+  if (!email) {
+    errors.push('FORWARD_TO_EMAIL is not set. This is required for forwarding to work.');
+  } else {
+    if (!/@/.test(email)) {
       errors.push('FORWARD_TO_EMAIL "' + email + '" does not look like a valid email address.');
     }
-  } catch (_e) {
-    errors.push('FORWARD_TO_EMAIL is not set. This is required for forwarding to work.');
+    if (/[,;]/.test(email)) {
+      errors.push('FORWARD_TO_EMAIL must be a single email address. Multiple recipients are not allowed for security reasons.');
+    }
   }
 
   var senders = Config.getAllowedSenders();
