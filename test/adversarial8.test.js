@@ -310,4 +310,123 @@ describe('Adversarial Round 8 — Subtle integration bugs', () => {
       expect(userContent).not.toContain('See below');
     });
   });
+
+  describe('BUG 20: daisy-chain thread where attachment is on non-allowed sender produces zombie thread', () => {
+    test('forwardToTarget with zero qualifying messages still applies a label to prevent re-evaluation', () => {
+      // Scenario: classify() returns null (should forward) via daisy-chain,
+      // but the PDF attachment is on the colleague's message, not the supplier's.
+      // _messagesWithAttachment filters by isSupplierAllowed, so targets = [].
+      // forwardToTarget does nothing — no forward, no label — creating a zombie
+      // thread that will be re-evaluated on every run forever.
+      mockPropsStore.DRY_RUN = 'false';
+      mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+      Config.__reset();
+
+      // Supplier message has no attachment
+      const supplierMsg = createMockMessage({
+        from: '<supplier@example.com>',
+        subject: 'Invoice #42',
+        body: 'See attached invoice',
+      });
+      // Colleague forwards and attaches the PDF
+      const pdfAtt = createMockAttachment('invoice.pdf');
+      const colleagueMsg = createMockMessage({
+        from: '<colleague@company.com>',
+        subject: 'FW: Invoice #42',
+        attachments: [pdfAtt],
+      });
+      const thread = createMockThread({ messages: [supplierMsg, colleagueMsg] });
+
+      // classify returns null because threadHasAllowedAttachment checks ALL messages
+      const classifyResult = Classifier.classify(thread, colleagueMsg);
+      expect(classifyResult).toBeNull(); // confirms classify says "forward"
+
+      // But forwardToTarget finds zero targets (colleague not in allowlist)
+      Forwarding.forwardToTarget(thread);
+
+      // BUG: Neither forwarded nor rejected label is applied.
+      // The thread becomes a zombie — re-evaluated every run, never resolved.
+      // At minimum, a label should be applied so the thread is not re-evaluated.
+      const hasAnyLabel = thread.addLabel.mock.calls.length > 0;
+      expect(hasAnyLabel).toBe(true);
+    });
+  });
+
+  describe('BUG 21: backfillSender wastes budget on already-forwarded threads', () => {
+    test('already-forwarded threads consume processed limit in backfillSender', () => {
+      // backfillSender uses Classifier.classify which returns 'already-forwarded',
+      // but unlike processLiveEmails (fixed in BUG 16), backfillSender increments
+      // processed++ unconditionally, wasting budget on already-forwarded threads.
+      mockPropsStore.DRY_RUN = 'false';
+      mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+      mockPropsStore.MAX_EMAILS_PER_RUN = '2';
+      Config.__reset();
+
+      const fwdLabel = Labels.getForwarded();
+
+      // Two already-forwarded threads
+      const oldMsg1 = createMockMessage({ from: '<supplier@example.com>' });
+      const oldThread1 = createMockThread({ messages: [oldMsg1], labels: [fwdLabel] });
+      const oldMsg2 = createMockMessage({ from: '<supplier@example.com>' });
+      const oldThread2 = createMockThread({ messages: [oldMsg2], labels: [fwdLabel] });
+
+      // A new legitimate thread
+      const newAtt = createMockAttachment('invoice.pdf');
+      const newMsg = createMockMessage({
+        from: '<supplier@example.com>',
+        attachments: [newAtt],
+      });
+      const newThread = createMockThread({ messages: [newMsg] });
+
+      mockGmailApp.search.mockReturnValue([oldThread1, oldThread2, newThread]);
+
+      backfillSender('supplier@example.com');
+
+      // The new thread should still be forwarded even though two already-forwarded
+      // threads were encountered first. If budget is wasted, newMsg.forward won't be called.
+      expect(newMsg.forward).toHaveBeenCalledWith('test@target.com');
+    });
+  });
+
+  describe('BUG 22: MAX_EMAILS_PER_RUN=0 silently processes nothing', () => {
+    test('_getInt allows zero which silently disables all processing', () => {
+      // _getInt returns defaultValue for NaN and negative, but allows 0.
+      // MAX_EMAILS_PER_RUN=0 means the loop condition `processed < 0` is
+      // immediately false, so nothing is ever processed. This is a silent
+      // misconfiguration that could go unnoticed.
+      mockPropsStore.MAX_EMAILS_PER_RUN = '0';
+      mockPropsStore.ENABLE_LIVE_FORWARDING = 'true';
+      mockPropsStore.DRY_RUN = 'false';
+      mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+      Config.__reset();
+
+      const att = createMockAttachment('invoice.pdf');
+      const msg = createMockMessage({
+        from: '<supplier@example.com>',
+        attachments: [att],
+      });
+      const thread = createMockThread({ messages: [msg] });
+      mockGmailApp.search.mockReturnValue([thread]);
+
+      processLiveEmails();
+
+      // With MAX_EMAILS_PER_RUN=0, zero emails are processed.
+      // This is arguably a bug: 0 should either be treated as "unlimited"
+      // or fall back to the default, not silently disable processing.
+      // At minimum, getMaxEmailsPerRun should return default for 0.
+      const limit = Config.getMaxEmailsPerRun();
+      expect(limit).toBeGreaterThan(0);
+    });
+  });
+
+  describe('BUG 23: _getInt with negative value returns default but negative string prefix passes', () => {
+    test('_getInt correctly rejects -1 and returns default', () => {
+      mockPropsStore.MAX_EMAILS_PER_RUN = '-1';
+      Config.__reset();
+
+      const val = Config.getMaxEmailsPerRun();
+      expect(val).toBe(DEFAULT_MAX_EMAILS_PER_RUN);
+      expect(val).toBeGreaterThan(0);
+    });
+  });
 });

@@ -93,7 +93,10 @@ var Config = (function () {
     getDiscoveryDays:       function () { return _getInt('DISCOVERY_DAYS', DEFAULT_DISCOVERY_DAYS); },
     getBackfillAfterDate:   function () { return _get('BACKFILL_AFTER_DATE', null); },
     isDryRun:               function () { return _getBool('DRY_RUN', DEFAULT_DRY_RUN); },
-    getMaxEmailsPerRun:     function () { return _getInt('MAX_EMAILS_PER_RUN', DEFAULT_MAX_EMAILS_PER_RUN); },
+    getMaxEmailsPerRun:     function () {
+      var val = _getInt('MAX_EMAILS_PER_RUN', DEFAULT_MAX_EMAILS_PER_RUN);
+      return val === 0 ? DEFAULT_MAX_EMAILS_PER_RUN : val;
+    },
     isLiveForwardingEnabled: function () { return _getBool('ENABLE_LIVE_FORWARDING', false); },
 
     // LLM invoice classification (multimodal — email + PDF)

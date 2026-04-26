@@ -48,8 +48,13 @@ var Forwarding = (function () {
         _forward(message, thread);
       });
 
-      if (!Config.isDryRun() && targets.length > 0) {
-        Labels.applyForwarded(thread);
+      if (!Config.isDryRun()) {
+        if (targets.length > 0) {
+          Labels.applyForwarded(thread);
+        } else {
+          Labels.applyRejected(thread);
+          Log.info('No qualifying attachments from allowed senders — marking rejected to prevent re-evaluation');
+        }
       }
     },
 

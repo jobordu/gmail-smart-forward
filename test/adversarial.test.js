@@ -251,7 +251,7 @@ describe('Adversarial — Forwarding security', () => {
     expect(unallowedMsg.forward).not.toHaveBeenCalled();
   });
 
-  test('forwarded label is NOT applied when no messages qualify (empty _messagesWithAttachment)', () => {
+  test('rejected label IS applied when no messages qualify (empty _messagesWithAttachment) to prevent zombie threads', () => {
     mockPropsStore.DRY_RUN = 'false';
     mockPropsStore.ALLOWED_SENDERS = '';
     mockPropsStore.ALLOWED_DOMAINS = '';
@@ -262,7 +262,7 @@ describe('Adversarial — Forwarding security', () => {
 
     Forwarding.forwardToTarget(thread);
 
-    expect(thread.addLabel).not.toHaveBeenCalled();
+    expect(thread.addLabel).toHaveBeenCalled();
   });
 
   test('markRejected logs rejection reason from the LAST message, not the one that triggered rejection', () => {
@@ -320,10 +320,10 @@ describe('Adversarial — Config parsing', () => {
     expect(Config.getMaxEmailsPerRun()).toBe(DEFAULT_MAX_EMAILS_PER_RUN);
   });
 
-  test('_getInt: zero is accepted (valid for DISCOVERY_DAYS=0 meaning today-only)', () => {
+  test('_getInt: zero for MAX_EMAILS_PER_RUN falls back to default to prevent silent misconfiguration', () => {
     mockPropsStore.MAX_EMAILS_PER_RUN = '0';
     Config.__reset();
-    expect(Config.getMaxEmailsPerRun()).toBe(0);
+    expect(Config.getMaxEmailsPerRun()).toBe(DEFAULT_MAX_EMAILS_PER_RUN);
   });
 
   test('_getInt: float is truncated to integer', () => {

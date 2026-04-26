@@ -59,6 +59,8 @@ function backfillSender(senderEmail) {
 
     var reason = Classifier.classify(thread, message);
 
+    if (reason === 'already-forwarded') continue;
+
     processed++;
     if (reason === null) {
       Forwarding.forwardToTarget(thread);
@@ -100,6 +102,8 @@ function _runBackfill() {
     var message  = messages[messages.length - 1];
 
     var reason = Classifier.classify(thread, message);
+
+    if (reason === 'already-forwarded') continue;
 
     processed++;
     if (reason === null) {

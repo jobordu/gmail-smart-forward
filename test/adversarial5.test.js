@@ -263,11 +263,11 @@ describe('Adversarial Round 5 — New bugs', () => {
     });
   });
 
-  describe('BUG 18: _getInt returns 0 for value "0" (confirmed NOT a bug)', () => {
-    test('MAX_EMAILS_PER_RUN=0 returns 0 as a valid value', () => {
+  describe('BUG 18: _getInt returns default for value "0" to prevent silent misconfiguration', () => {
+    test('MAX_EMAILS_PER_RUN=0 returns default value', () => {
       mockPropsStore.MAX_EMAILS_PER_RUN = '0';
       Config.__reset();
-      expect(Config.getMaxEmailsPerRun()).toBe(0);
+      expect(Config.getMaxEmailsPerRun()).toBe(DEFAULT_MAX_EMAILS_PER_RUN);
     });
   });
 
