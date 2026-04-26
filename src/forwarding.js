@@ -26,7 +26,7 @@ var Forwarding = (function () {
   // by an allowlisted sender. Prevents forwarding PDFs from non-approved
   // senders who happen to reply in a thread started by an approved supplier.
   function _messagesWithAttachment(thread) {
-    return thread.getMessages().filter(function (msg) {
+    return (thread.getMessages() || []).filter(function (msg) {
       if (!Classifier.isSupplierAllowed(msg)) return false;
       var attachments = msg.getAttachments();
       if (!attachments) return false;

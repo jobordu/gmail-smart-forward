@@ -83,7 +83,7 @@ var LlmClassifier = (function () {
 
   function _buildMetadataFallback(attachment, allAttachments) {
     var parts = [];
-    var name = attachment.getName();
+    var name = attachment.getName() || '(unknown)';
     parts.push('Filename: ' + name);
 
     try {
@@ -116,6 +116,7 @@ var LlmClassifier = (function () {
     var allAttachments = [];
     for (var i = 0; i < messages.length; i++) {
       var attachments = messages[i].getAttachments();
+      if (!attachments) continue;
       for (var a = 0; a < attachments.length; a++) {
         allAttachments.push(attachments[a]);
       }
@@ -123,9 +124,11 @@ var LlmClassifier = (function () {
 
     for (var mi = 0; mi < messages.length; mi++) {
       var msgsAttachments = messages[mi].getAttachments();
+      if (!msgsAttachments) continue;
       for (var j = 0; j < msgsAttachments.length; j++) {
         var att = msgsAttachments[j];
-        if (att.getName().toLowerCase().endsWith('.pdf')) {
+          var attName = att.getName();
+          if (attName && attName.toLowerCase().endsWith('.pdf')) {
           var blob = att.copyBlob();
           var text;
 
@@ -195,6 +198,9 @@ var LlmClassifier = (function () {
     }
 
     var body = JSON.parse(response.getContentText());
+    if (!body.choices || !body.choices.length || !body.choices[0].message) {
+      throw new Error('LLM API returned response with no valid choices');
+    }
     var msg = body.choices[0].message;
     var raw = msg.content || '';
 
@@ -215,8 +221,8 @@ var LlmClassifier = (function () {
     // Returns { is_invoice: bool, confidence: float, reason: string }
     // Throws on API or parse errors — caller should handle gracefully.
     classifyInvoice: function (message, thread) {
-      var subject  = message.getSubject();
-      var body     = message.getPlainBody();
+      var subject  = message.getSubject() || '';
+      var body     = message.getPlainBody() || '';
       var pdfText  = _extractPdfText(thread);
       var content  = _buildUserContent(subject, body, pdfText);
 

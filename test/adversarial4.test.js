@@ -7,7 +7,7 @@ describe('Adversarial Round 4 — New bugs', () => {
     test('getSenderEmail throws TypeError when getFrom() returns null', () => {
       const msg = createMockMessage();
       msg.getFrom = jest.fn(() => null);
-      expect(() => Classifier.getSenderEmail(msg)).toThrow();
+      expect(() => Classifier.getSenderEmail(msg)).not.toThrow();
     });
   });
 
@@ -15,7 +15,7 @@ describe('Adversarial Round 4 — New bugs', () => {
     test('isForwardableReceipt throws when getSubject() returns null', () => {
       const msg = createMockMessage();
       msg.getSubject = jest.fn(() => null);
-      expect(() => Classifier.isForwardableReceipt(msg)).toThrow();
+      expect(() => Classifier.isForwardableReceipt(msg)).not.toThrow();
     });
   });
 
@@ -23,7 +23,7 @@ describe('Adversarial Round 4 — New bugs', () => {
     test('isExcludedMessage throws when getPlainBody() returns null', () => {
       const msg = createMockMessage({ subject: 'normal subject' });
       msg.getPlainBody = jest.fn(() => null);
-      expect(() => Classifier.isExcludedMessage(msg)).toThrow();
+      expect(() => Classifier.isExcludedMessage(msg)).not.toThrow();
     });
   });
 
@@ -36,7 +36,7 @@ describe('Adversarial Round 4 — New bugs', () => {
       const thread = createMockThread({ messages: [msg] });
       mockGmailApp.search.mockReturnValue([thread]);
 
-      expect(() => discoverSuppliers()).toThrow();
+      expect(() => discoverSuppliers()).not.toThrow();
     });
   });
 
@@ -137,7 +137,7 @@ describe('Adversarial Round 4 — New bugs', () => {
     test('isForwarded throws when thread.getLabels() returns null', () => {
       const thread = createMockThread();
       thread.getLabels = jest.fn(() => null);
-      expect(() => Labels.isForwarded(thread)).toThrow();
+      expect(() => Labels.isForwarded(thread)).not.toThrow();
     });
   });
 

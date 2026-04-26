@@ -6,6 +6,7 @@ var Classifier = (function () {
 
   function _senderEmail(message) {
     var from = message.getFrom();
+    if (typeof from !== 'string') return '';
     var matches = from.match(/<([^>]+)>/g);
     if (matches && matches.length > 0) {
       return matches[matches.length - 1].slice(1, -1).toLowerCase().trim();
@@ -20,6 +21,7 @@ var Classifier = (function () {
   }
 
   function _containsKeyword(text, keywords) {
+    if (typeof text !== 'string') return null;
     var lower = text.toLowerCase();
     for (var i = 0; i < keywords.length; i++) {
       if (lower.indexOf(keywords[i]) !== -1) return keywords[i];
@@ -28,7 +30,9 @@ var Classifier = (function () {
   }
 
   function _attachmentNames(message) {
-    return message.getAttachments().map(function (a) {
+    var attachments = message.getAttachments();
+    if (!attachments) return [];
+    return attachments.map(function (a) {
       var name = a.getName();
       return name ? name.toLowerCase() : '';
     });
@@ -80,6 +84,7 @@ var Classifier = (function () {
     // True if message has at least one PDF attachment
   hasValidAttachment: function (message) {
     var attachments = message.getAttachments();
+    if (!attachments) return false;
     for (var i = 0; i < attachments.length; i++) {
       var name = attachments[i].getName();
       if (name && name.toLowerCase().endsWith('.pdf')) return true;

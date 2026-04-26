@@ -27,7 +27,7 @@ describe('Adversarial Round 5 — New bugs', () => {
     test('isForwardableReceipt crashes when getAttachments returns null', () => {
       const msg = createMockMessage({ subject: 'Hello' });
       msg.getAttachments = jest.fn(() => null);
-      expect(() => Classifier.isForwardableReceipt(msg)).toThrow();
+      expect(() => Classifier.isForwardableReceipt(msg)).not.toThrow();
     });
   });
 
@@ -35,7 +35,7 @@ describe('Adversarial Round 5 — New bugs', () => {
     test('hasValidAttachment throws when getAttachments returns null', () => {
       const msg = createMockMessage();
       msg.getAttachments = jest.fn(() => null);
-      expect(() => Classifier.hasValidAttachment(msg)).toThrow();
+      expect(() => Classifier.hasValidAttachment(msg)).not.toThrow();
     });
   });
 
@@ -54,7 +54,7 @@ describe('Adversarial Round 5 — New bugs', () => {
       const thread = createMockThread({ messages: [msg1, msg2] });
       mockGmailApp.search.mockReturnValue([thread]);
 
-      expect(() => discoverSuppliers()).toThrow();
+      expect(() => discoverSuppliers()).not.toThrow();
     });
   });
 
@@ -213,7 +213,7 @@ describe('Adversarial Round 5 — New bugs', () => {
     test('getSenderEmail throws when getFrom returns undefined', () => {
       const msg = createMockMessage();
       msg.getFrom = jest.fn(() => undefined);
-      expect(() => Classifier.getSenderEmail(msg)).toThrow();
+      expect(() => Classifier.getSenderEmail(msg)).not.toThrow();
     });
   });
 

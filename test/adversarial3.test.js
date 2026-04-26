@@ -7,19 +7,19 @@ describe('Adversarial Round 3 — New bugs', () => {
     test('isExcludedMessage crashes when getSubject() returns null', () => {
       const msg = createMockMessage({ subject: 'Hello' });
       msg.getSubject = jest.fn(() => null);
-      expect(() => Classifier.isExcludedMessage(msg)).toThrow(TypeError);
+      expect(() => Classifier.isExcludedMessage(msg)).not.toThrow();
     });
 
     test('isForwardableReceipt crashes when getSubject() returns null', () => {
       const msg = createMockMessage({ subject: 'Hello' });
       msg.getSubject = jest.fn(() => null);
-      expect(() => Classifier.isForwardableReceipt(msg)).toThrow(TypeError);
+      expect(() => Classifier.isForwardableReceipt(msg)).not.toThrow();
     });
 
     test('isExcludedMessage crashes when getPlainBody() returns null', () => {
       const msg = createMockMessage({ body: 'body' });
       msg.getPlainBody = jest.fn(() => null);
-      expect(() => Classifier.isExcludedMessage(msg)).toThrow(TypeError);
+      expect(() => Classifier.isExcludedMessage(msg)).not.toThrow();
     });
   });
 
@@ -27,7 +27,7 @@ describe('Adversarial Round 3 — New bugs', () => {
     test('getSenderEmail crashes when getFrom() returns null', () => {
       const msg = createMockMessage();
       msg.getFrom = jest.fn(() => null);
-      expect(() => Classifier.getSenderEmail(msg)).toThrow(TypeError);
+      expect(() => Classifier.getSenderEmail(msg)).not.toThrow();
     });
   });
 
@@ -96,7 +96,7 @@ describe('Adversarial Round 3 — New bugs', () => {
       const thread = createMockThread({ messages: [msg] });
       mockGmailApp.search.mockReturnValue([thread]);
 
-      expect(() => discoverSuppliers()).toThrow(TypeError);
+      expect(() => discoverSuppliers()).not.toThrow();
     });
   });
 

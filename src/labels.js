@@ -24,6 +24,7 @@ var Labels = (function () {
 
   function _hasLabel(thread, label) {
     var threadLabels = thread.getLabels();
+    if (!threadLabels) return false;
     var targetName = label.getName();
     for (var i = 0; i < threadLabels.length; i++) {
       if (threadLabels[i].getName() === targetName) return true;

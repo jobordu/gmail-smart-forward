@@ -250,17 +250,16 @@ describe('Adversarial Round 10 — Iteration 6 hardening', () => {
   // Forwarding.forwardToTarget. But if forwardToTarget is called directly
   // (e.g., from smoke-test.js or future code), the crash is unguarded.
   describe('TEST 7: forwardToTarget with thread returning null messages', () => {
-    test('forwardToTarget crashes when thread.getMessages returns null', () => {
+    test('forwardToTarget handles null getMessages gracefully', () => {
       mockPropsStore.DRY_RUN = 'false';
       Config.__reset();
 
       const thread = createMockThread();
       thread.getMessages = jest.fn(() => null);
 
-      // This SHOULD NOT crash — but if _messagesWithAttachment doesn't guard
-      // against null, it will throw TypeError: Cannot read properties of null
-      // (reading 'filter'). This test exposes the missing guard.
-      expect(() => Forwarding.forwardToTarget(thread)).toThrow();
+      // Should not crash — _messagesWithAttachment guards against null
+      // by falling back to an empty array.
+      expect(() => Forwarding.forwardToTarget(thread)).not.toThrow();
     });
   });
 
@@ -286,7 +285,8 @@ describe('Adversarial Round 10 — Iteration 6 hardening', () => {
       });
       const thread = createMockThread({ messages: [msg] });
 
-      // Should throw TypeError: Cannot read properties of undefined (reading 'content')
+      // classifyInvoice throws on empty choices — that's by design.
+      // The caller (classify) catches it for fail-open behavior.
       expect(() => LlmClassifier.classifyInvoice(msg, thread)).toThrow();
 
       // But classify should catch the error and fail-open

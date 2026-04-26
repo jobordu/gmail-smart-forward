@@ -127,7 +127,7 @@ describe('Adversarial Round 6 — New bugs', () => {
       const thread = createMockThread({ messages: [msg1, msg2] });
       mockGmailApp.search.mockReturnValue([thread]);
 
-      expect(() => discoverSuppliers()).toThrow();
+      expect(() => discoverSuppliers()).not.toThrow();
     });
   });
 
@@ -142,7 +142,7 @@ describe('Adversarial Round 6 — New bugs', () => {
       const thread = createMockThread({ messages: [msg] });
       mockGmailApp.search.mockReturnValue([thread]);
 
-      expect(() => discoverSuppliers()).toThrow();
+      expect(() => discoverSuppliers()).not.toThrow();
     });
   });
 
@@ -151,7 +151,7 @@ describe('Adversarial Round 6 — New bugs', () => {
     test('getSenderEmail throws when getFrom returns a number', () => {
       const msg = createMockMessage();
       msg.getFrom = jest.fn(() => 42);
-      expect(() => Classifier.getSenderEmail(msg)).toThrow();
+      expect(() => Classifier.getSenderEmail(msg)).not.toThrow();
     });
   });
 
@@ -161,7 +161,7 @@ describe('Adversarial Round 6 — New bugs', () => {
       const msg = createMockMessage();
       msg.getSubject = jest.fn(() => null);
       msg.getPlainBody = jest.fn(() => null);
-      expect(() => Classifier.isExcludedMessage(msg)).toThrow();
+      expect(() => Classifier.isExcludedMessage(msg)).not.toThrow();
     });
   });
 
