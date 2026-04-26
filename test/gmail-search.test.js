@@ -65,8 +65,8 @@ describe('GmailSearch', () => {
       GmailSearch.forBackfill(null);
 
       const query = mockGmailApp.search.mock.calls[0][0];
-      expect(query).toContain('-label:gmail-smart-forward/forwarded');
-      expect(query).toContain('-label:gmail-smart-forward/rejected');
+      expect(query).toContain('-label:"gmail-smart-forward/forwarded"');
+      expect(query).toContain('-label:"gmail-smart-forward/rejected"');
       expect(query).toContain('-in:sent');
       expect(query).toContain('filename:pdf');
     });
@@ -98,8 +98,8 @@ describe('GmailSearch', () => {
 
       const query = mockGmailApp.search.mock.calls[0][0];
       expect(query).toContain('after:');
-      expect(query).toContain('-label:gmail-smart-forward/forwarded');
-      expect(query).toContain('-label:gmail-smart-forward/rejected');
+      expect(query).toContain('-label:"gmail-smart-forward/forwarded"');
+      expect(query).toContain('-label:"gmail-smart-forward/rejected"');
       expect(query).toContain('-in:sent');
       expect(query).toContain('-in:drafts');
     });

@@ -3,23 +3,28 @@
 // Create, retrieve, and apply Gmail labels safely.
 
 var Labels = (function () {
-  var _cache = {};
+  var _cache = Object.create(null);
+
+  // Use a prefix to avoid prototype key collisions (__proto__, constructor)
+  var _KEY_PREFIX = 'label:';
 
   function _getOrCreate(name) {
-    if (_cache[name]) return _cache[name];
+    var key = _KEY_PREFIX + name;
+    if (_cache[key]) return _cache[key];
     var existing = GmailApp.getUserLabelByName(name);
     if (existing) {
-      _cache[name] = existing;
+      _cache[key] = existing;
       return existing;
     }
     var created = GmailApp.createLabel(name);
-    _cache[name] = created;
+    _cache[key] = created;
     Logger.log('Created label: ' + name);
     return created;
   }
 
   function _hasLabel(thread, label) {
     var threadLabels = thread.getLabels();
+    if (!threadLabels) return false;
     var targetName = label.getName();
     for (var i = 0; i < threadLabels.length; i++) {
       if (threadLabels[i].getName() === targetName) return true;
@@ -59,6 +64,6 @@ var Labels = (function () {
       return _hasLabel(thread, Labels.getForwarded());
     },
 
-    __reset: function () { _cache = {}; },
+    __reset: function () { _cache = Object.create(null); },
   };
 })();

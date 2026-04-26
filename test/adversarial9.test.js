@@ -84,7 +84,8 @@ describe('Adversarial Round 9 — Iteration 5 hardening', () => {
       });
       const thread = createMockThread({ messages: [msg] });
 
-      // Should throw, but classify should catch and fail-open
+      // classifyInvoice throws on malformed responses — that's by design.
+      // The caller (classify) catches it for fail-open behavior.
       expect(() => LlmClassifier.classifyInvoice(msg, thread)).toThrow();
       const result = Classifier.classify(thread, msg);
       expect(result).toBeNull(); // fail-open

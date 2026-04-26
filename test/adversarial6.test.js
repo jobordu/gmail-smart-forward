@@ -112,8 +112,8 @@ describe('Adversarial Round 6 — New bugs', () => {
   });
 
   // ─── discovery null getDate on first message ──────────────────────
-  describe('BUG 7: discoverSuppliers crashes on null getDate during date comparison', () => {
-    test('first message with null getDate sets firstSeen/lastSeen to null, second crashes', () => {
+  describe('BUG 7: discoverSuppliers handles null getDate during date comparison', () => {
+    test('first message with null getDate does not prevent processing second message', () => {
       const msg1 = createMockMessage({
         from: '<supplier@a.com>',
         subject: 'Invoice',
@@ -127,13 +127,13 @@ describe('Adversarial Round 6 — New bugs', () => {
       const thread = createMockThread({ messages: [msg1, msg2] });
       mockGmailApp.search.mockReturnValue([thread]);
 
-      expect(() => discoverSuppliers()).toThrow();
+      expect(() => discoverSuppliers()).not.toThrow();
     });
   });
 
   // ─── discovery null getDate on toISOString ────────────────────────
-  describe('BUG 8: discoverSuppliers toISOString crashes on null firstSeen/lastSeen', () => {
-    test('discoverSuppliers crashes in report when getDate returns null', () => {
+  describe('BUG 8: discoverSuppliers handles null firstSeen/lastSeen in report', () => {
+    test('discoverSuppliers does not crash in report when getDate returns null', () => {
       const msg = createMockMessage({
         from: '<supplier@a.com>',
         subject: 'Invoice',
@@ -142,26 +142,26 @@ describe('Adversarial Round 6 — New bugs', () => {
       const thread = createMockThread({ messages: [msg] });
       mockGmailApp.search.mockReturnValue([thread]);
 
-      expect(() => discoverSuppliers()).toThrow();
+      expect(() => discoverSuppliers()).not.toThrow();
     });
   });
 
   // ─── _senderEmail crashes on non-string getFrom (number) ─────────
-  describe('BUG 9: _senderEmail crashes when getFrom returns non-string', () => {
-    test('getSenderEmail throws when getFrom returns a number', () => {
+  describe('BUG 9: _senderEmail handles non-string getFrom gracefully', () => {
+    test('getSenderEmail returns empty string when getFrom returns a number', () => {
       const msg = createMockMessage();
       msg.getFrom = jest.fn(() => 42);
-      expect(() => Classifier.getSenderEmail(msg)).toThrow();
+      expect(Classifier.getSenderEmail(msg)).toBe('');
     });
   });
 
   // ─── _containsKeyword subject/body null in classify ───────────────
-  describe('BUG 10: isExcludedMessage crashes on null subject AND null body', () => {
-    test('isExcludedMessage throws when both getSubject and getPlainBody return null', () => {
+  describe('BUG 10: isExcludedMessage handles null subject AND null body', () => {
+    test('isExcludedMessage returns false when both getSubject and getPlainBody return null', () => {
       const msg = createMockMessage();
       msg.getSubject = jest.fn(() => null);
       msg.getPlainBody = jest.fn(() => null);
-      expect(() => Classifier.isExcludedMessage(msg)).toThrow();
+      expect(Classifier.isExcludedMessage(msg)).toBe(false);
     });
   });
 

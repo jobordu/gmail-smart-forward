@@ -53,7 +53,7 @@ describe('LlmClassifier', () => {
 
       expect(typeof userContent).toBe('string');
       expect(userContent).toContain('Your invoice');
-      expect(userContent).toContain('--- PDF attachment content ---');
+      expect(userContent).toContain('BEGIN PDF ATTACHMENT');
     });
 
     test('sends text-only content when no PDF attachment', () => {
@@ -79,7 +79,7 @@ describe('LlmClassifier', () => {
       const userContent = payload.messages[1].content;
 
       expect(typeof userContent).toBe('string');
-      expect(userContent).not.toContain('--- PDF attachment content ---');
+      expect(userContent).not.toContain('BEGIN PDF ATTACHMENT');
     });
 
     test('includes correct system prompt', () => {
@@ -136,7 +136,7 @@ describe('LlmClassifier', () => {
       const msg = createMockMessage({ subject: 'Test', body: 'Test', attachments: [] });
       const thread = createMockThread({ messages: [msg] });
 
-      expect(() => LlmClassifier.classifyInvoice(msg, thread)).toThrow('LLM API returned 429');
+      expect(() => LlmClassifier.classifyInvoice(msg, thread)).toThrow('LLM API returned HTTP 429');
     });
 
     test('truncates body to 3000 characters', () => {
@@ -180,7 +180,7 @@ describe('LlmClassifier', () => {
       const payload = JSON.parse(fetchCall[1].payload);
       const userContent = payload.messages[1].content;
 
-      expect(userContent).toContain('--- PDF attachment content ---');
+      expect(userContent).toContain('BEGIN PDF ATTACHMENT');
     });
 
     test('skips non-PDF attachments', () => {
@@ -202,7 +202,7 @@ describe('LlmClassifier', () => {
       const payload = JSON.parse(fetchCall[1].payload);
       const userContent = payload.messages[1].content;
 
-      expect(userContent).not.toContain('--- PDF attachment content ---');
+      expect(userContent).not.toContain('BEGIN PDF ATTACHMENT');
     });
 
     test('finds first PDF attachment skipping non-PDF attachments', () => {
@@ -224,7 +224,7 @@ describe('LlmClassifier', () => {
       const fetchCall = UrlFetchApp.fetch.mock.calls[0];
       const payload = JSON.parse(fetchCall[1].payload);
       const userContent = payload.messages[1].content;
-      expect(userContent).toContain('--- PDF attachment content ---');
+      expect(userContent).toContain('BEGIN PDF ATTACHMENT');
     });
 
     test('uses muteHttpExceptions in fetch options', () => {
@@ -891,8 +891,8 @@ describe('LlmClassifier', () => {
       const payload = JSON.parse(fetchCall[1].payload);
       const userContent = payload.messages[1].content;
 
-      const pdfSection = userContent.split('--- PDF attachment content ---')[1];
-      expect(pdfSection.length).toBeLessThanOrEqual(3001);
+      const pdfSection = userContent.split('BEGIN PDF ATTACHMENT ---\n')[1].split('\n--- END PDF ATTACHMENT')[0];
+      expect(pdfSection.length).toBeLessThanOrEqual(3000);
     });
 
     test('BUG: trailing slash in LLM_BASE_URL produces double-slash in API endpoint URL', () => {

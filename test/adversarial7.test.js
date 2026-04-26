@@ -153,7 +153,7 @@ describe('Adversarial Round 7 — Final edge cases', () => {
       const circular = { self: null };
       circular.self = circular;
 
-      expect(() => Log.info('test', circular)).toThrow();
+      expect(() => Log.info('test', circular)).not.toThrow();
     });
   });
 

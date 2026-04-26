@@ -206,4 +206,145 @@ describe('Adversarial Round 10 — Iteration 6 hardening', () => {
       expect(msg.forward).toHaveBeenCalledWith('test@target.com');
     });
   });
+
+  // ─── TEST 6: discoverSuppliers crashes when message.getSubject() returns null ─
+  // discovery.js line 46: `message.getSubject() || '(no subject)'` is safe for subjects.
+  // But line 51: `var subject = message.getSubject() || '';` followed by
+  // `subject.toLowerCase().indexOf(kw)` in _containsKeyword. The || '' guard
+  // protects this path. However, the keyword forEach on line 51-55 calls
+  // Config.getSubjectKeywords() which returns DEFAULT_SUBJECT_KEYWORDS via _getList.
+  // If getSubject() returns null AND keywords contain multi-byte chars, verify
+  // no crash occurs and keyword tracking still works correctly with null subjects.
+  describe('TEST 6: discoverSuppliers handles null subject from message', () => {
+    test('message with null subject does not crash keyword tracking', () => {
+      const msg = createMockMessage({
+        from: '<supplier@a.com>',
+        subject: null,
+        date: new Date('2025-01-10'),
+        attachments: [],
+      });
+      // Override getSubject to return null explicitly
+      msg.getSubject = jest.fn(() => null);
+
+      const thread = createMockThread({ messages: [msg] });
+      mockGmailApp.search.mockReturnValue([thread]);
+
+      // Should not throw — the || '' guard in discovery.js line 50 must protect
+      expect(() => discoverSuppliers()).not.toThrow();
+
+      const result = discoverSuppliers();
+      const supplierA = result.find(r => r.email === 'supplier@a.com');
+      expect(supplierA).toBeDefined();
+      // Subject should be collected as '(no subject)' (line 46 guard)
+      expect(supplierA.subjects).toContain('(no subject)');
+      // Keywords object should be empty since subject was null
+      expect(Object.keys(supplierA.keywords)).toHaveLength(0);
+    });
+  });
+
+  // ─── TEST 7: forwardToTarget crashes when thread.getMessages() returns null ──
+  // forwarding.js line 29: `_messagesWithAttachment` calls
+  // `thread.getMessages().filter(...)`. If getMessages() returns null,
+  // `.filter()` on null throws TypeError. This is a different path from
+  // live.js/backfill.js which guard against null messages before calling
+  // Forwarding.forwardToTarget. But if forwardToTarget is called directly
+  // (e.g., from smoke-test.js or future code), the crash is unguarded.
+  describe('TEST 7: forwardToTarget with thread returning null messages', () => {
+    test('forwardToTarget handles null getMessages gracefully', () => {
+      mockPropsStore.DRY_RUN = 'false';
+      Config.__reset();
+
+      const thread = createMockThread();
+      thread.getMessages = jest.fn(() => null);
+
+      // Should not crash — _messagesWithAttachment guards against null
+      // by falling back to an empty array.
+      expect(() => Forwarding.forwardToTarget(thread)).not.toThrow();
+    });
+  });
+
+  // ─── TEST 8: LLM API returns empty choices array ─────────────────────────
+  // llm.js line 191: `body.choices[0].message` — if choices is an empty array [],
+  // then choices[0] is undefined, and .message throws TypeError.
+  // This is different from the "no choices key" test in adversarial9 which tests
+  // when the entire choices key is missing. Here the key exists but is empty.
+  describe('TEST 8: LLM API returns 200 with empty choices array', () => {
+    test('classifyInvoice throws on response with empty choices array', () => {
+      mockPropsStore.ENABLE_LLM_CLASSIFICATION = 'true';
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+      Config.__reset();
+
+      mockHttpResponse.getResponseCode.mockReturnValue(200);
+      mockHttpResponse.getContentText.mockReturnValue('{"choices":[]}');
+
+      const att = createMockAttachment('invoice.pdf');
+      const msg = createMockMessage({
+        from: '<supplier@example.com>',
+        attachments: [att],
+      });
+      const thread = createMockThread({ messages: [msg] });
+
+      // classifyInvoice throws on empty choices — that's by design.
+      // The caller (classify) catches it for fail-open behavior.
+      expect(() => LlmClassifier.classifyInvoice(msg, thread)).toThrow();
+
+      // But classify should catch the error and fail-open
+      const result = Classifier.classify(thread, msg);
+      expect(result).toBeNull(); // fail-open
+    });
+  });
+
+  // ─── TEST 9: _senderDomain returns empty string for email with multiple @ ─
+  // classifier.js line 18: `parts.length === 2 ? parts[1] : ''`
+  // An email like "user@sub@domain.com" splits into 3 parts, returning ''.
+  // If this empty domain is compared against ALLOWED_DOMAINS which also
+  // contains '', it could accidentally match. Verify the empty domain
+  // does NOT match an empty ALLOWED_DOMAINS entry.
+  describe('TEST 9: _senderDomain with multiple @ signs returns empty, does not match empty domain entry', () => {
+    test('email with multiple @ signs returns empty domain and is not accidentally allowed', () => {
+      mockPropsStore.ALLOWED_SENDERS = '';
+      mockPropsStore.ALLOWED_DOMAINS = '';
+      Config.__reset();
+
+      const msg = createMockMessage();
+      msg.getFrom = jest.fn(() => 'user@sub@domain.com');
+
+      // Domain should be empty string (3-part split fails the === 2 check)
+      expect(Classifier.getSenderDomain(msg)).toBe('');
+
+      // Even with empty ALLOWED_DOMAINS, the sender should NOT be allowed
+      // because _getList filters out empty/whitespace entries
+      expect(Classifier.isSupplierAllowed(msg)).toBe(false);
+    });
+  });
+
+  // ─── TEST 10: migrateLabels when old label's getThreads returns threads ──
+  // setup.js migrateLabels: iterates old label threads, adds new label,
+  // removes old. If GmailApp.getUserLabelByName returns a label for the
+  // old name but the new label doesn't exist yet, it creates it. But if
+  // GmailApp.createLabel returns null (API failure), newLabel is null and
+  // thread.addLabel(null) could crash. This is an untested error path.
+  describe('TEST 10: migrateLabels with thread migration actually moves labels', () => {
+    test('migrateLabels moves threads from old label to new label', () => {
+      const mockOldThread = createMockThread({ id: 'migrate-thread' });
+      const mockOldLabel = {
+        getName: jest.fn(() => 'revolut-forwarded'),
+        getThreads: jest.fn(() => [mockOldThread]),
+      };
+
+      // Register old label in GmailApp mock
+      mockGmailApp.getUserLabelByName.mockImplementation((name) => {
+        if (name === 'revolut-forwarded') return mockOldLabel;
+        return mockLabelsRegistry[name] || null;
+      });
+
+      migrateLabels();
+
+      // The old label should have been removed from the thread
+      expect(mockOldThread.removeLabel).toHaveBeenCalledWith(mockOldLabel);
+      // A new label should have been added
+      expect(mockOldThread.addLabel).toHaveBeenCalled();
+    });
+  });
 });
