@@ -140,7 +140,7 @@ var Classifier = (function () {
         try {
           var result = LlmClassifier.classifyInvoice(message, thread);
           var threshold = Config.getLlmConfidenceThreshold();
-          if (!result.is_invoice || result.confidence < threshold) {
+          if (!result.is_invoice || typeof result.confidence !== 'number' || isNaN(result.confidence) || result.confidence < threshold) {
             Log.info('LLM rejected: confidence=' + result.confidence + ' reason=' + result.reason);
             return 'llm-not-invoice';
           }

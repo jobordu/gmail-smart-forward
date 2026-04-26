@@ -255,10 +255,8 @@ describe('Adversarial Round 8 — Subtle integration bugs', () => {
       Config.__reset();
 
       const senders = Config.getAllowedSenders();
-      // "support" should either be filtered out or the list should only contain valid emails
-      // Currently it silently includes "support" which is not a valid email
-      const hasInvalidEntry = senders.some(s => !s.includes('@'));
-      expect(hasInvalidEntry).toBe(false);
+      // Invalid entry "support" (no @) should be filtered out, valid entry preserved
+      expect(senders).toEqual(['real@supplier.com']);
     });
   });
 
@@ -344,11 +342,9 @@ describe('Adversarial Round 8 — Subtle integration bugs', () => {
       // But forwardToTarget finds zero targets (colleague not in allowlist)
       Forwarding.forwardToTarget(thread);
 
-      // BUG: Neither forwarded nor rejected label is applied.
-      // The thread becomes a zombie — re-evaluated every run, never resolved.
-      // At minimum, a label should be applied so the thread is not re-evaluated.
-      const hasAnyLabel = thread.addLabel.mock.calls.length > 0;
-      expect(hasAnyLabel).toBe(true);
+      // The thread must get the rejected label to prevent zombie re-evaluation
+      const rejectedLabel = Labels.getRejected();
+      expect(thread.addLabel).toHaveBeenCalledWith(rejectedLabel);
     });
   });
 
@@ -410,12 +406,11 @@ describe('Adversarial Round 8 — Subtle integration bugs', () => {
 
       processLiveEmails();
 
-      // With MAX_EMAILS_PER_RUN=0, zero emails are processed.
-      // This is arguably a bug: 0 should either be treated as "unlimited"
-      // or fall back to the default, not silently disable processing.
-      // At minimum, getMaxEmailsPerRun should return default for 0.
+      // MAX_EMAILS_PER_RUN=0 should fall back to default, not disable processing
       const limit = Config.getMaxEmailsPerRun();
       expect(limit).toBeGreaterThan(0);
+      // Verify the message still gets forwarded end-to-end
+      expect(msg.forward).toHaveBeenCalledWith('test@target.com');
     });
   });
 
