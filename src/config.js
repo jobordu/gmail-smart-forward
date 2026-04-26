@@ -32,7 +32,9 @@ var Config = (function () {
       if (angleStart === -1) return trimmed;
       var angleEnd = trimmed.indexOf('>', angleStart);
       if (angleEnd === -1) return trimmed;
-      return trimmed.substring(angleStart + 1, angleEnd);
+      var extracted = trimmed.substring(angleStart + 1, angleEnd);
+      if (extracted && !extracted.includes('@')) return '';
+      return extracted;
     }).filter(Boolean);
   }
 

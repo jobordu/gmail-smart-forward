@@ -402,13 +402,12 @@ describe('Adversarial — GmailSearch query construction', () => {
     expect(query).toContain('"[payment]"');
   });
 
-  test('forBackfill: afterDateStr with invalid format is passed through without validation', () => {
+  test('forBackfill: afterDateStr with invalid format throws an error', () => {
     mockGmailApp.search.mockReturnValue([]);
 
-    GmailSearch.forBackfill('not-a-date');
-
-    const query = mockGmailApp.search.mock.calls[0][0];
-    expect(query).toContain('after:not/a/date');
+    expect(() => {
+      GmailSearch.forBackfill('not-a-date');
+    }).toThrow(/Invalid BACKFILL_AFTER_DATE format/);
   });
 
   test('_search: stops when GmailApp.search returns empty array mid-pagination', () => {

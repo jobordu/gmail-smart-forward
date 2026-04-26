@@ -61,8 +61,12 @@ var GmailSearch = (function () {
         '-in:drafts',
       ];
       if (afterDateStr) {
-        // afterDateStr should be YYYY/MM/DD
-        parts.push('after:' + afterDateStr.replace(/-/g, '/'));
+        // afterDateStr should be YYYY-MM-DD or YYYY/MM/DD
+        var normalized = afterDateStr.replace(/-/g, '/');
+        if (!/^\d{4}\/\d{2}\/\d{2}$/.test(normalized)) {
+          throw new Error('Invalid BACKFILL_AFTER_DATE format: "' + afterDateStr + '". Expected YYYY-MM-DD.');
+        }
+        parts.push('after:' + normalized);
       }
       var subjectKw = Config.getSubjectKeywords();
       var kwQuery = subjectKw.map(function (kw) { return '"' + kw + '"'; }).join(' OR ');

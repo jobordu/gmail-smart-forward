@@ -193,4 +193,121 @@ describe('Adversarial Round 8 — Subtle integration bugs', () => {
       // It returns 2.5 as-is, no validation
     });
   });
+
+  describe('BUG 16: processLiveEmails wastes budget on already-forwarded threads', () => {
+    test('already-forwarded threads consume processed limit, starving new threads', () => {
+      // This exposes a logic gap: already-forwarded threads increment `processed`
+      // counter, so if MAX_EMAILS_PER_RUN=2 and first 2 threads are already forwarded,
+      // the 3rd legitimate thread is never evaluated.
+      mockPropsStore.ENABLE_LIVE_FORWARDING = 'true';
+      mockPropsStore.DRY_RUN = 'false';
+      mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+      mockPropsStore.MAX_EMAILS_PER_RUN = '2';
+      Config.__reset();
+
+      const fwdLabel = Labels.getForwarded();
+
+      // Two already-forwarded threads
+      const oldMsg1 = createMockMessage({ from: '<supplier@example.com>' });
+      const oldThread1 = createMockThread({ messages: [oldMsg1], labels: [fwdLabel] });
+      const oldMsg2 = createMockMessage({ from: '<supplier@example.com>' });
+      const oldThread2 = createMockThread({ messages: [oldMsg2], labels: [fwdLabel] });
+
+      // A new legitimate thread that should be forwarded
+      const newAtt = createMockAttachment('invoice.pdf');
+      const newMsg = createMockMessage({
+        from: '<supplier@example.com>',
+        attachments: [newAtt],
+      });
+      const newThread = createMockThread({ messages: [newMsg] });
+
+      mockGmailApp.search.mockReturnValue([oldThread1, oldThread2, newThread]);
+
+      processLiveEmails();
+
+      // BUG: newMsg.forward is never called because the two already-forwarded
+      // threads consumed the processed budget. The already-forwarded threads
+      // should not count against the limit.
+      expect(newMsg.forward).toHaveBeenCalledWith('test@target.com');
+    });
+  });
+
+  describe('BUG 17: forBackfill silently produces malformed query from bad date', () => {
+    test('BACKFILL_AFTER_DATE with extra dashes produces invalid Gmail query', () => {
+      // afterDateStr "2025-01-01-extra" should be rejected as invalid
+      mockPropsStore.BACKFILL_AFTER_DATE = '2025-01-01-extra';
+      Config.__reset();
+
+      expect(() => {
+        GmailSearch.forBackfill(Config.getBackfillAfterDate());
+      }).toThrow(/Invalid BACKFILL_AFTER_DATE format/);
+    });
+  });
+
+  describe('BUG 18: _getList with bare name in angle brackets creates phantom entry', () => {
+    test('ALLOWED_SENDERS containing <support> (no @) creates an entry that could match malformed emails', () => {
+      // If someone mistakenly puts "<support>" in ALLOWED_SENDERS,
+      // _getList extracts "support" as a bare sender. This entry will never
+      // match a real email via indexOf, but it pollutes the list silently.
+      // More critically, if ALLOWED_DOMAINS contained such an entry, it could
+      // match _senderDomain's empty-string return for malformed emails.
+      mockPropsStore.ALLOWED_SENDERS = '<support>, real@supplier.com';
+      Config.__reset();
+
+      const senders = Config.getAllowedSenders();
+      // "support" should either be filtered out or the list should only contain valid emails
+      // Currently it silently includes "support" which is not a valid email
+      const hasInvalidEntry = senders.some(s => !s.includes('@'));
+      expect(hasInvalidEntry).toBe(false);
+    });
+  });
+
+  describe('BUG 19: daisy-chain classify replaces message but caller keeps stale reference', () => {
+    test('classify with daisy-chain returns null but LLM may evaluate different message than caller expects', () => {
+      // When the latest message is not allowlisted, classify() internally
+      // replaces `message` with the allowlisted one found in the thread.
+      // The LLM then evaluates the supplier's message. But the caller in
+      // live.js still holds a reference to the original non-allowlisted message.
+      // If the caller logs or acts on the original message, it's inconsistent.
+      mockPropsStore.ALLOWED_SENDERS = 'supplier@example.com';
+      mockPropsStore.ENABLE_LLM_CLASSIFICATION = 'true';
+      mockPropsStore.LLM_API_KEY = 'test-key';
+      mockPropsStore.DRY_RUN = 'false';
+      Config.__reset();
+
+      mockHttpResponse.getContentText.mockReturnValue(
+        '{"choices":[{"message":{"content":"{\\"is_invoice\\":true,\\"confidence\\":0.95,\\"reason\\":\\"invoice\\"}"}}]}'
+      );
+
+      const att = createMockAttachment('invoice.pdf');
+      const supplierMsg = createMockMessage({
+        from: '<supplier@example.com>',
+        subject: 'Invoice #42',
+        body: 'Please find invoice attached',
+        attachments: [att],
+      });
+      const forwarderMsg = createMockMessage({
+        from: '<colleague@company.com>',
+        subject: 'FW: Invoice #42',
+        body: 'See below',
+      });
+      const thread = createMockThread({ messages: [supplierMsg, forwarderMsg] });
+
+      // classify returns null (should forward)
+      const result = Classifier.classify(thread, forwarderMsg);
+      expect(result).toBeNull();
+
+      // But the API call should have received the supplier's subject/body,
+      // not the forwarder's. Verify the LLM was called with supplier context.
+      const fetchCall = mockUrlFetchApp.fetch.mock.calls[0];
+      const payload = JSON.parse(fetchCall[1].payload);
+      const userContent = payload.messages[1].content;
+
+      // The LLM should see "Invoice #42" from the supplier, not "FW: Invoice #42"
+      expect(userContent).toContain('Invoice #42');
+      expect(userContent).toContain('Please find invoice attached');
+      // It should NOT contain the forwarder's body
+      expect(userContent).not.toContain('See below');
+    });
+  });
 });
