@@ -146,7 +146,10 @@ var Classifier = (function () {
           }
         } catch (e) {
           // Fail-open: log the error but do not block forwarding
-          Log.info('LLM classification error (skipping): ' + e.message);
+          // Redact potential API keys from error messages before logging
+          var safeMsg = (e.message || '').replace(/Bearer\s+\S+/gi, 'Bearer [REDACTED]')
+            .replace(/sk-[a-zA-Z0-9_-]+/g, '[REDACTED]');
+          Log.info('LLM classification error (skipping): ' + safeMsg);
         }
       }
 
