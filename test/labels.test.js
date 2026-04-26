@@ -105,7 +105,7 @@ describe('Labels', () => {
     expect(label1).toBe(label2);
   });
 
-  test('BUG: applyRejected does not remove candidate label, unlike applyForwarded — rejected threads stay in candidate search results', () => {
+  test('applyRejected removes candidate label to prevent re-evaluation', () => {
     // applyForwarded calls both addLabel(forwarded) and removeLabel(candidate).
     // applyRejected only calls addLabel(rejected) — it does NOT remove candidate.
     // This means rejected threads retain the candidate label and will appear in

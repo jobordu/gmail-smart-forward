@@ -119,7 +119,7 @@ var Config = (function () {
         excludedSenders:     _getList('EXCLUDED_SENDERS', []),
         excludedDomains:     _getList('EXCLUDED_DOMAINS', []),
         dryRun:              _getBool('DRY_RUN', DEFAULT_DRY_RUN),
-        maxEmailsPerRun:     _getInt('MAX_EMAILS_PER_RUN', DEFAULT_MAX_EMAILS_PER_RUN),
+        maxEmailsPerRun:     Config.getMaxEmailsPerRun(),
         liveForwarding:      _getBool('ENABLE_LIVE_FORWARDING', false),
         backfillAfterDate:   _get('BACKFILL_AFTER_DATE', '(not set)'),
         discoveryDays:       _getInt('DISCOVERY_DAYS', DEFAULT_DISCOVERY_DAYS),

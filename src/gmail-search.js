@@ -64,7 +64,14 @@ var GmailSearch = (function () {
         // afterDateStr should be YYYY-MM-DD or YYYY/MM/DD
         var normalized = afterDateStr.replace(/-/g, '/');
         if (!/^\d{4}\/\d{2}\/\d{2}$/.test(normalized)) {
-          throw new Error('Invalid BACKFILL_AFTER_DATE format: "' + afterDateStr + '". Expected YYYY-MM-DD.');
+          throw new Error('Invalid BACKFILL_AFTER_DATE format: "' + afterDateStr + '". Expected YYYY-MM-DD or YYYY/MM/DD.');
+        }
+        var dateParts = normalized.split('/');
+        var parsed = new Date(parseInt(dateParts[0], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[2], 10));
+        if (parsed.getFullYear() !== parseInt(dateParts[0], 10) ||
+            parsed.getMonth() !== parseInt(dateParts[1], 10) - 1 ||
+            parsed.getDate() !== parseInt(dateParts[2], 10)) {
+          throw new Error('Invalid BACKFILL_AFTER_DATE value: "' + afterDateStr + '". Date does not exist.');
         }
         parts.push('after:' + normalized);
       }

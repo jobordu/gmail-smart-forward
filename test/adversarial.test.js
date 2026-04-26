@@ -262,7 +262,8 @@ describe('Adversarial — Forwarding security', () => {
 
     Forwarding.forwardToTarget(thread);
 
-    expect(thread.addLabel).toHaveBeenCalled();
+    const rejectedLabel = Labels.getRejected();
+    expect(thread.addLabel).toHaveBeenCalledWith(rejectedLabel);
   });
 
   test('markRejected logs rejection reason from the LAST message, not the one that triggered rejection', () => {

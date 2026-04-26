@@ -25,10 +25,11 @@ function backfillApprovedSuppliers() {
 }
 
 function backfillSender(senderEmail) {
-  if (!senderEmail) {
+  if (!senderEmail || !senderEmail.trim()) {
     Logger.log('Usage: backfillSender("invoice+statements@stripe.com")');
     return;
   }
+  senderEmail = senderEmail.trim();
 
   var query = [
     'from:' + senderEmail,

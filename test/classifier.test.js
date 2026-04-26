@@ -504,12 +504,9 @@ describe('Classifier', () => {
       const msg = createMockMessage({ from: '<supplier@example.com>', attachments: [att] });
       const thread = createMockThread({ messages: [msg] });
 
-      // This SHOULD reject (no confidence = uncertain), but the implementation
-      // treats undefined confidence as passing. Expect null (forwarded).
       const result = Classifier.classify(thread, msg);
-      // If this is null, the bug exists: missing confidence should not pass.
-      // A robust implementation would reject when confidence is missing/undefined.
-      expect(result).toBeNull();
+      // Missing confidence field should be rejected — not forwarded
+      expect(result).toBe('llm-not-invoice');
     });
 
     test('classify forwards email when LLM returns confidence as non-numeric string (NaN < threshold is false)', () => {
@@ -530,8 +527,8 @@ describe('Classifier', () => {
       const thread = createMockThread({ messages: [msg] });
 
       const result = Classifier.classify(thread, msg);
-      // Bug: "high" is not a valid confidence value but passes the < threshold check
-      expect(result).toBeNull();
+      // Non-numeric confidence should be rejected — not forwarded
+      expect(result).toBe('llm-not-invoice');
     });
   });
 

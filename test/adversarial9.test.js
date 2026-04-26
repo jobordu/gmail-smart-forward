@@ -7,7 +7,7 @@ describe('Adversarial Round 9 — Iteration 5 hardening', () => {
   // setupTrigger and removeTrigger both have null guards for
   // getProjectTriggers(), but status() does NOT. It directly does
   // `triggers.length` which throws TypeError on null.
-  describe('BUG 1: status() lacks null guard for getProjectTriggers', () => {
+  describe('status() handles null from getProjectTriggers', () => {
     test('status does not crash when getProjectTriggers returns null', () => {
       const original = global.ScriptApp;
       global.ScriptApp = { ...original, getProjectTriggers: jest.fn(() => null) };
@@ -23,7 +23,7 @@ describe('Adversarial Round 9 — Iteration 5 hardening', () => {
   // ─── BUG 2: clearAllLabels crashes when getThreads returns null ─────
   // clearAllLabels calls entry.label.getThreads() then .forEach() on it.
   // If getThreads returns null (e.g. API error), .forEach() on null throws.
-  describe('BUG 2: clearAllLabels crashes when getThreads returns null', () => {
+  describe('clearAllLabels handles null from getThreads', () => {
     test('clearAllLabels does not crash when a label getThreads returns null', () => {
       // Create labels first
       Labels.setup();
@@ -40,7 +40,7 @@ describe('Adversarial Round 9 — Iteration 5 hardening', () => {
   //     returns 0.7 (the default) for NaN. So threshold = 0.7 passes the
   //     0..1 range check. This means garbage threshold values are silently
   //     accepted with no warning.
-  describe('BUG 3: validateConfig silently accepts garbage LLM threshold', () => {
+  describe('validateConfig warns on garbage LLM threshold', () => {
     test('validateConfig warns when LLM_CONFIDENCE_THRESHOLD is garbage', () => {
       mockPropsStore.ENABLE_LLM_CLASSIFICATION = 'true';
       mockPropsStore.LLM_API_KEY = 'test-key';
@@ -66,7 +66,7 @@ describe('Adversarial Round 9 — Iteration 5 hardening', () => {
   // body.choices[0] throws TypeError. classify() catches it (fail-open).
   // But the error message is unhelpful — "Cannot read properties of
   // undefined (reading '0')" rather than something actionable.
-  describe('BUG 4: LLM API returns 200 with no choices key', () => {
+  describe('LLM API returns 200 with no choices key', () => {
     test('classifyInvoice throws on response missing choices key entirely', () => {
       mockPropsStore.ENABLE_LLM_CLASSIFICATION = 'true';
       mockPropsStore.LLM_API_KEY = 'test-key';
@@ -96,20 +96,14 @@ describe('Adversarial Round 9 — Iteration 5 hardening', () => {
   // undefined, but what about empty string ''? An empty string is falsy
   // so it should early-return. But what about a whitespace-only string?
   // ' ' is truthy, so it would construct query 'from: ' which is invalid.
-  describe('BUG 5: backfillSender with whitespace-only sender', () => {
-    test('backfillSender with whitespace-only string still runs (no guard)', () => {
+  describe('backfillSender rejects whitespace-only sender', () => {
+    test('backfillSender with whitespace-only string is rejected by guard', () => {
       mockGmailApp.search.mockReturnValue([]);
 
-      // Whitespace-only string is truthy, so the guard `if (!senderEmail)` passes.
-      // This constructs query "from:   filename:pdf ..." which is likely malformed.
       backfillSender('   ');
 
-      // Verify the search was called (meaning the guard didn't stop it)
-      expect(mockGmailApp.search).toHaveBeenCalled();
-      const query = mockGmailApp.search.mock.calls[0][0];
-      // The query contains 'from:   ' with only whitespace — this is a bug
-      // because it should either trim or reject whitespace-only input
-      expect(query).toContain('from:');
+      // Whitespace-only input should be rejected — no search should occur
+      expect(mockGmailApp.search).not.toHaveBeenCalled();
     });
   });
 });
