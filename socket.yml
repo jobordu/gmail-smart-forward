@@ -1,0 +1,19 @@
+version: 2
+
+githubApp:
+  enabled: true
+  pullRequestAlertsEnabled: true
+  dependencyOverviewEnabled: true
+  projectReportsEnabled: true
+
+triggerPaths:
+  - 'package.json'
+  - 'package-lock.json'
+  - 'pnpm-lock.yaml'
+  - '.github/workflows/socket.yml'
+
+projectIgnorePaths:
+  - 'coverage/'
+  - 'docs/'
+  - 'scripts/'
+  - 'test/'
