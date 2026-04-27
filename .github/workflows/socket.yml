@@ -1,0 +1,31 @@
+name: Socket Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  socket:
+    name: Socket Supply Chain Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Socket Security CLI
+        run: npm install -g @socketsecurity/cli
+
+      - name: Configure Socket API token
+        env:
+          SOCKET_API_KEY: ${{ secrets.SOCKET_API_KEY }}
+        run: npx socket config set apiToken "$SOCKET_API_KEY"
+
+      - name: Run Socket Security
+        run: npx socket ci
